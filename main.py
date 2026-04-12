@@ -10,7 +10,7 @@ from utils.cli_handlers import (
 cs = ColorScheme()
 
 def main():
-    logging.basicConfig(filename='cli_activity.log', level=logging.INFO)
+    logging.basicConfig(filename='activity.log', level=logging.INFO)
     
     with console.status("[bold green]Initializing AI Engine..."):
         model = get_model()
