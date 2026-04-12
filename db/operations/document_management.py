@@ -1,0 +1,116 @@
+# Must read: This file contains the insert_document function, which is a core database operation.
+""":NOTE
+
+* Description:
+    ! This file contains the insert_document function, which is a core database operation.
+"""
+
+import os
+import sys
+
+# Ensure the parent directory is in sys.path for relative imports
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+
+
+import psycopg2
+from utils.helper_functions import check_if_empty_input, measure_time
+from utils.languages import detect_language
+from utils.text_properties import normalize_content
+
+from utils.ColorScheme import ColorScheme
+
+cs = ColorScheme()
+
+
+def insert_document(content, conn, cursor, model, commit=True, silent=False, preserve_fidelity=False):
+    # Check for empty input
+    if check_if_empty_input(content):
+        if not silent:
+            print(f"{cs.RED}❌ Input cannot be empty.{cs.RESET}")
+        return False
+
+    get_elapsed = measure_time()
+    
+    # 💎 High-Fidelity Logic: Preserve exact text for Scholar/AI data
+    if preserve_fidelity:
+        nor_content = content.strip()
+    else:
+        nor_content = normalize_content(content)
+        
+    language = detect_language(nor_content)
+    
+    try:
+        # Generate embedding
+        emb = model.encode(nor_content).tolist()
+
+        # Insert content and FTS vector (PostgreSQL)
+        cursor.execute(
+            "INSERT INTO document (content, language, content_tsvector) VALUES (%s, %s, to_tsvector('simple', %s)) RETURNING id;",
+            (nor_content, language, nor_content),
+        )
+        result = cursor.fetchone()
+        if result is None:
+            if not silent:
+                print(f"{cs.RED}❌ INSERT failed - no ID returned{cs.RESET}")
+            return False
+        doc_id = result[0]
+
+        # 3. Insert embedding (pgvector)
+        cursor.execute(
+            "INSERT INTO document_embedding (doc_id, embedding) VALUES (%s, %s)",
+            (doc_id, emb),
+        )
+        # 4. Commit and notify BM25 utility
+        if commit:
+            conn.commit()
+            if not silent:
+                print(
+                    f"{cs.GREEN}✅ Inserted document (language: {language}). Time: {get_elapsed()}s {cs.RESET}"
+                )
+        else:
+            if not silent:
+                print(
+                    f"{cs.YELLOW}📝 Queued for batch (language: {language}). Time: {get_elapsed()}s {cs.RESET}"
+                )
+        return doc_id
+
+    except Exception as e:
+        print(f"{cs.RED}❌ Error after {get_elapsed()}s. Error: {e}{cs.RESET}")
+        print(f"{cs.YELLOW}   Content: '{nor_content[:80]}...'{cs.RESET}")
+        conn.rollback()
+        return False
+
+
+# Document Deleteion function
+def delete_document(doc_id, conn, cursor):
+    if not isinstance(doc_id, int):
+        print(f"{cs.RED}❌ Document ID must be an integer.{cs.RESET}")
+        return False
+    try:
+
+        # Start a transaction delete both entries
+        cursor.execute("BEGIN;")
+        # Delete from document_embedding first due to foreign key constraint
+        cursor.execute("DELETE FROM document_embedding WHERE doc_id = %s;", (doc_id,))
+        cursor.execute("DELETE FROM document WHERE id = %s;", (doc_id,))
+        cursor.execute("COMMIT;")
+
+        # Check if any rows were deleted
+        if cursor.rowcount == 0:
+            cursor.execute("ROLLBACK;")
+            print(f"{cs.RED}❌ No document found with ID {doc_id}.{cs.RESET}")
+            return True
+        conn.commit()
+
+        # Notify BM25 utility to update its index
+        print(f"{cs.GREEN}✅ Document with ID {doc_id} deleted successfully.{cs.RESET}")
+
+    except psycopg2.Error as e:
+        # Rollback on any database error
+        cursor.execute("ROLLBACK")
+        print(f"{cs.RED}❌ Database error during deletion: {e}{cs.RESET}")
+        return False
+    except Exception as e:
+        cursor.execute("ROLLBACK")
+        print(f"{cs.RED}❌ Unexpected error during deletion: {e}{cs.RESET}")
+        return False
