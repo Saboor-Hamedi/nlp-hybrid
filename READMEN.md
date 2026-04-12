@@ -1,7 +1,9 @@
 # HYBRID SEARCH ENGINE CLI
 
-- This is a hybrid search egine using PostgreSQL for data storage and retrieval, and Sentence Transformers for semantic search.
-  Prerequisites:
+- This is a RAG application using PostgreSQL for data storage and retrieval, and Sentence Transformers for semantic search.
+
+#### Prerequisites:
+
 - Python 3.10+
 - PostgreSQL 15+
 - Sentence Transformers

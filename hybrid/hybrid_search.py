@@ -1,3 +1,4 @@
+from utils.console_stats import display_latency_report
 import os
 import time
 
@@ -26,32 +27,32 @@ def search_hybrid(
     query: str, conn, cursor, model, top_k=TOP_K, threshold=BASE_THRESHOLD, fusion_strategy="linear", alpha=None
 ):
     """
-    Executes a hybrid search combining Semantic (Vector) and Lexical (BM25) results.
+    Executes a hybrid search combining Semantic (Vector) and Lexical (BM25) results
+    with high-precision latency tracking.
     """
     if check_if_empty_input(query):
         print(f"{cs.RED}Input cannot be empty.{cs.RESET}")
         return [], {}
-    
-    get_elapsed = measure_time()
-    t_start = time.time()
 
-    # 1. Semantic Search
+    metrics = {}
+    
+    # 1. Semantic Search (The "Brain")
+    start_sem = time.perf_counter()
     try:
         sem_results = execute_vector_query(query, conn, cursor, model, top_k, threshold)
     except Exception as e:
         print(f"{cs.RED}Error in execute_vector_query: {e}{cs.RESET}")
         sem_results = []
-    
-    t_sem = time.time()
-    
-    # 2. BM25 Search (DB-Native TS_RANK)
+    metrics['semantic_ms'] = (time.perf_counter() - start_sem) * 1000
+
+    # 2. BM25 Search (The "Muscle")
+    start_key = time.perf_counter()
     try:
         bm25_results = execute_bm25_query(query, cursor, top_k)
     except Exception as e:
         print(f"{cs.RED}Error in execute_bm25_query: {e}{cs.RESET}")
         bm25_results = []
-        
-    t_key = time.time()
+    metrics['keyword_ms'] = (time.perf_counter() - start_key) * 1000
 
     # Determine alpha (BM25 weight)
     if alpha is not None:
@@ -73,38 +74,33 @@ def search_hybrid(
         except Exception:
             ALPHA = 0.5
 
-    # 3. Fusion Logic
+    # 3. Fusion Logic (The "Magic")
+    start_fuse = time.perf_counter()
     try:
         scorer = HybridScorer(alpha=ALPHA)
         final, components = scorer.combine(sem_results, bm25_results, top_k=top_k, strategy=fusion_strategy)
     except Exception as e:
         print(f"{cs.RED}Error in HybridScorer: {e}{cs.RESET}")
         final, components = [], {}
-        
-    t_fuse = time.time()
+    metrics['fusion_ms'] = (time.perf_counter() - start_fuse) * 1000
 
-    # Calculate Latency Breakdown
-    lat_sem = (t_sem - t_start) * 1000
-    lat_key = (t_key - t_sem) * 1000
-    lat_fuse = (t_fuse - t_key) * 1000
+    # Finalize Metrics
+    metrics['total_ms'] = sum(metrics.values())
 
     display_mode = "hybrid" if fusion_strategy == "linear" else f"hybrid-{fusion_strategy}"
     
-    # Display results
-    display_in_table(final, query=query, mode=display_mode)
-    display_search_stats(sem_results, bm25_results, get_elapsed, mode=display_mode)
-
+    
+    display_in_table(final, query=query, mode=display_mode) # This is the muscle of our search: BM25 is the "Muscle": It finds exact keywords (e.g., searching "pet" finds "pet").
+    display_latency_report(metrics) # This is the brain of our search: Semantic Search is the "Brain": It finds meaning (e.g., searching "pet" finds "dog").
+    
     stats = {
         "sem_results": sem_results,
         "bm25_results": bm25_results,
         "components": components,
         "alpha": ALPHA,
         "search_type": display_mode,
-        "latency_stats": {
-            "semantic": lat_sem,
-            "keyword": lat_key,
-            "fusion": lat_fuse
-        }
+        "latency_stats": metrics
     }
 
     return final, stats
+

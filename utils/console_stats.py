@@ -11,23 +11,6 @@ from utils.ColorScheme import ColorScheme
 
 cs = ColorScheme()
 
-# def display_search_stats(semantic_results, bm25_results, get_elapsed_func, model="semnatic"):
-#     """
-#     Prints CLI statistics regarding search results and elapsed time.
-
-#     Args:
-#         semantic_results (list): Results from the vector search.
-#         bm25_results (list): Results from the BM25 search.
-#         get_elapsed_func (callable): The measure_time return function to get elapsed time.
-#     """
-#     print(f"{cs.GREEN}Semantic results: {len(semantic_results)} documents{cs.RESET}")
-
-#     if bm25_results:
-#         print(f"{cs.GREEN}BM25 results: {len(bm25_results)} documents with score > 0{cs.RESET}")
-#     print(f"{cs.OKBLUE}Search complete. Time: {get_elapsed_func()} {cs.RESET}")
-
-# core/utils/console_stats.py
-
 
 def display_search_stats(
     semantic_results: List[Tuple[Any, ...]],
@@ -65,3 +48,14 @@ def display_search_stats(
     # 3. Final timing line (always shown)
     # -----------------------------------------------------------------
     print(f"{cs.OKBLUE}Search complete. Time: {get_elapsed_func()}{cs.RESET}")
+
+
+def display_latency_report(metrics):
+    print(f"\n{cs.BOLD}⏱️  Latency Breakdown{cs.RESET}")
+    print("-" * 30)
+    for key, value in metrics.items():
+        # Highlight slower parts in Red, fast parts in Green
+        color = cs.RED if value > 500 else cs.GREEN 
+        name = key.replace('_ms', '').capitalize()
+        print(f"{name:<12} : {color}{value:>7.2f} ms{cs.RESET}")
+    print("-" * 30)
