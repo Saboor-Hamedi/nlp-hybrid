@@ -1,3 +1,4 @@
+# This is the manager of the hybrid search
 from utils.console_stats import display_latency_report
 import os
 import time
@@ -90,7 +91,7 @@ def search_hybrid(
     display_mode = "hybrid" if fusion_strategy == "linear" else f"hybrid-{fusion_strategy}"
     
     
-    display_in_table(final, query=query, mode=display_mode) # This is the muscle of our search: BM25 is the "Muscle": It finds exact keywords (e.g., searching "pet" finds "pet").
+    display_in_table(final, query=query, mode=display_mode, components=components) # This is the muscle of our search: BM25 is the "Muscle": It finds exact keywords (e.g., searching "pet" finds "pet").
     display_latency_report(metrics) # This is the brain of our search: Semantic Search is the "Brain": It finds meaning (e.g., searching "pet" finds "dog").
     
     stats = {

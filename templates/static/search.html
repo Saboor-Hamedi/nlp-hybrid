@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Hyrbrid Search</title>
+</head>
+
+<body>
+
+    <header class="bg-gray-300 border-b border-gray-200 px-4">
+        <nav class="max-w-7xl mxa-auto sm:px-6 lg:px-8">
+            <div class="w-full py-6 flex items-center justify-between">
+                <form action="/search" , method="POST">
+                    <input type="text" name="query" placeholder="Search here..."
+                        class="border border-red-300 rounded-md px-2 py-1 focus:outline-none">
+                    <button type="submit"
+                        class="bg-blue-500 focus:outline-none px-4 py-1 text-white rounded-md">Search</button>
+                </form>
+                <a href="/">Back to home</a>
+            </div>
+        </nav>
+    </header>
+    <main class="main">
+        <!-- <p>Query: {{ query }}</p> -->
+
+        {% if results %}
+        <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+            <ul>
+                {% for result in results %}
+                <li>
+                    <strong>ID:</strong> {{ result[0] }} <br>
+                    <strong>Content:</strong> {{ result[1] }} <br>
+                    <strong>Relevance Score:</strong> {{ result[2] }} <br>
+                    <strong>Language:</strong> {{ result[3] }} <br>
+                    <strong>Date:</strong> {{ result[4] }} <br>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% else %}
+        <!-- <p>No results found.</p> -->
+        {% endif %}
+
+
+    </main>
+</body>
+
+</html>

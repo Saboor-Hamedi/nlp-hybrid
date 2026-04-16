@@ -1,3 +1,12 @@
+
+
+"""
+ - This class is the judge. 
+ - This is where the math happens.
+ - This is where the magic happens. 
+ - This is where the final score is calculated. 
+ - This is sophistica, but not really it can go way more sophisticated.
+"""
 import math
 import os
 from typing import Any, Dict, List, Tuple
@@ -15,6 +24,12 @@ class HybridScorer:
         if not 0.0 <= alpha <= 1.0:
             raise ValueError("alpha must be between 0 and 1")
         self.alpha = float(alpha)
+
+    
+    """
+        This function is the most important part of this file. 
+        It takes a list of scores and squashes them into a range of 0 to 1.
+    """
 
     def _normalize_values(self, scores: List[float], method: str = "max") -> List[float]:
         if not scores:

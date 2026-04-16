@@ -8,6 +8,8 @@ def go_back(text):
 
 # Skip empty input
 def check_if_empty_input(text):
+    if text is None:
+        return True
     return len(text.strip()) == 0
 
 

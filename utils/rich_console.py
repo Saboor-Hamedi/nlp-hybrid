@@ -59,7 +59,8 @@ def truncate_text(text: str, max_length: int =300)-> str:
     else:
         return truncated[:-3] + "..." # Hard truncate
 
-def display_in_table(results, query="", mode: str = "semantic"):
+def display_in_table(results, query="", mode: str = "semantic",
+     components=None):
     """
     Prints the search results in a well-formatted rich table.
     """
@@ -71,14 +72,31 @@ def display_in_table(results, query="", mode: str = "semantic"):
 
     current_time = datetime.now()
    
-    table = Table(show_header=True, header_style="bold magenta", box=box.ROUNDED)
+    table = Table(show_header=True, 
+            header_style="bold magenta", 
+            box=box.ROUNDED,
+            title="Hybrid Search Results",
+            title_style="bold cyan",
+            collapse_padding=True,
+            expand=False,
+            )
+    
+    
     table.add_column("Doc ID",     style="cyan")
     table.add_column("Score",      style="magenta")
-    table.add_column("Content",    style="white", overflow="fold")
+    if components:
+        table.add_column("Brain (AI)", style="yellow", justify="center")
+        table.add_column("Muscle (BM25)", style="red", justify="center")
+
+    table.add_column("Content",    style="white", overflow="fold",  ratio=1)
     table.add_column("Language",   style="green")
     table.add_column("Created At", style="blue")
 
+    # ---------------------------------------------------------------------------
+    # 2. Build the row data (same logic as before)
+    # ---------------------------------------------------------------------------
     lang_map = {"en": "English", "fa": "Persian", "id": "Indonesian", None: "Unknown"}
+    row_data = [] 
 
     for doc_id, content, score, language, created_at in results:
         # cleaned_content  = clean_text(content)
@@ -104,13 +122,26 @@ def display_in_table(results, query="", mode: str = "semantic"):
             else str(created_at)
         )
 
-        table.add_row(
+        # 1. Start with columns: ID, Score, Content, Language
+        row_data = [
             str(doc_id),
             f"[{score_style}]{score:.3f}[/{score_style}]",
             highlighted,
-            language_display,
-            created_at_str,
-        )
+            language_display
+        ]
+
+        # 2. Add Brain/Muscle scores ONLY if the search was Hybrid
+        if components and doc_id in components:
+            c = components[doc_id]
+            row_data.append(f"{c['semantic_score']:.3f}")
+            row_data.append(f"{c['bm25_score']:.3f}")
+
+        # 3. Add Final column: Created At
+        row_data.append(created_at_str)
+
+        # 4. Use the '*' to unpack the list into the table row
+        table.add_row(*row_data)
+
     mode_label = {
         'semantic': 'Semantic (Vector)',
         'keyword': 'Keyword (BM25)',
