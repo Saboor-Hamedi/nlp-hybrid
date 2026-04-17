@@ -70,6 +70,64 @@ class DocumentManager:
             self.conn.rollback()
             return False
 
+    def select(self, doc_id=None, limit=10, offset=0):
+        get_elapsed = measure_time()
+        try:
+        
+            # This block fetches your list of documents for the home page
+            query = """
+                SELECT d.id, d.content, d.language, d.created_at, e.embedding 
+                FROM document d
+                LEFT JOIN document_embedding e ON d.id = e.doc_id
+                ORDER BY random() 
+                LIMIT %s OFFSET %s;
+            """
+            self.cursor.execute(query, (limit, offset))
+            rows = self.cursor.fetchall()
+            
+            results = []
+            for row in rows:
+                results.append({
+                    "id": row[0],
+                    "content": row[1],
+                    "language": row[2],
+                    "created_at": row[3],
+                    "embedding": row[4]
+                })
+            
+            print(f"{self.cs.GREEN}✅ Selected {len(results)} documents. Time: {get_elapsed()}s {self.cs.RESET}")
+            return results
+
+        except Exception as e:
+
+            print(f"{self.cs.RED}❌ Error in select: {e}{self.cs.RESET}")
+            self.conn.rollback()
+            return False
+
+    def show(self, doc_id):
+        query = """
+                    SELECT d.id, d.content, d.language, d.created_at, e.embedding 
+                    FROM document d
+                    LEFT JOIN document_embedding e ON d.id = e.doc_id
+                    WHERE d.id = %s;
+                """
+        try:
+            self.cursor.execute(query, (doc_id,))
+            row = self.cursor.fetchone()
+
+            if row: 
+                return {
+                    "id": row[0],
+                    "content": row[1],
+                    "language": row[2],
+                    "created_at": row[3],
+                    "embedding": row[4]
+                }
+            return None
+        except Exception as e:
+            print(f"{self.cs.RED}❌ Error in show: {e}{self.cs.RESET}")
+            self.conn.rollback()
+            return False
     def update(self, content, doc_id):
         pass
 

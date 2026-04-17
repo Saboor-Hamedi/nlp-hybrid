@@ -1,0 +1,22 @@
+{% extends 'static/base.html' %}
+
+{% block title %} Show - Hybrid Search Engine {% endblock %}
+{% include 'static/header.html'%}
+<!-- ERROR MESSAGE -->
+{% block content %}
+<!-- <p>Query: {{ query }}</p> -->
+{% if result %}
+<div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+    <ul>
+        <li>
+            <strong>ID:</strong> {{ result.id }} <br>
+            <strong>Content:</strong> {{ result.content }} <br>
+            <strong>Language:</strong> {{ result.language }} <br>
+            <strong>Date:</strong> {{ result.created_at }} <br>
+        </li>
+    </ul>
+</div>
+{% else %}
+<!-- <p>No results found.</p> -->
+{% endif %}
+{% endblock %}
