@@ -4,7 +4,7 @@
 
 {% block content %}
 
-<!-- Forensic Command Center (3-Column Layout) -->
+<!-- Forensic Command Center -->
 <div class="flex h-[calc(100vh-100px)] -m-6 md:-m-10 overflow-hidden theme-bg">
     
     <!-- Middle Column: The RAG Stream -->
@@ -41,12 +41,13 @@
                     </div>
                 </div>
 
-                <!-- Slim Command Input -->
-                <input type="text" id="stream-query" 
-                       class="w-full pl-36 pr-16 py-6 theme-bg theme-text text-sm border-none outline-none focus:ring-0 placeholder:theme-text placeholder:opacity-20 font-medium"
+                <!-- Ultra-Compact Fixed Workspace -->
+                <textarea id="stream-query" 
+                       class="w-full pl-36 pr-16 py-2 theme-bg theme-text text-sm border-none outline-none focus:ring-0 placeholder:theme-text placeholder:opacity-20 font-medium resize-none overflow-y-auto custom-scrollbar"
+                       style="height: 36px; min-height: 36px;"
                        placeholder="Type command..." 
                        autocomplete="off"
-                       onkeydown="if(event.key === 'Enter') executeStreamSearch()">
+                       onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); executeStreamSearch(); }"></textarea>
                 
                 <!-- Neural Pulsar Button -->
                 <div class="absolute right-5 inset-y-0 flex items-center">
@@ -92,6 +93,7 @@
     let currentMode = 'local';
     let abortController = null;
     let isGenerating = false;
+    let thematicCache = {}; // ID -> Thematic Data
 
     function setMode(mode) {
         if (isGenerating) return;
@@ -161,6 +163,7 @@
         `;
         thread.appendChild(userMsg);
         queryInput.value = '';
+        queryInput.style.height = '36px'; // Reset to new ultra-compact height
         thread.scrollTop = thread.scrollHeight;
 
         isGenerating = true;
@@ -182,10 +185,10 @@
                 <span class="text-[7px] font-bold theme-text-sec uppercase tracking-[0.2em] opacity-40">${label}</span>
                 <span id="${aiMsgId}-status" class="typing-dot text-[7px] font-bold text-blue-600 uppercase tracking-widest ml-3">Thinking...</span>
             </div>
-            <div class="theme-bg p-4 md:p-5 rounded-xl rounded-tl-none border theme-border shadow-sm max-w-[85%] theme-text relative group/bubble overflow-hidden">
+            <!-- Bubble starts hidden and grows as content arrives -->
+            <div id="${aiMsgId}-bubble" class="hidden theme-bg p-4 md:p-5 rounded-xl rounded-tl-none border theme-border shadow-sm max-w-[85%] theme-text relative group/bubble overflow-hidden animate-in fade-in zoom-in-95 duration-300">
                 <div id="${aiMsgId}-content" class="markdown-body leading-relaxed opacity-90"></div>
                 
-                <!-- Tactical Actions (Bottom-Right Anchor) -->
                 <div id="${aiMsgId}-actions" class="hidden mt-4 flex justify-end items-center gap-2 border-t border-transparent pt-2 group-hover/bubble:border-gray-100 dark:group-hover/bubble:border-gray-800 transition-colors">
                     <button onclick="saveInsight('${aiMsgId}', \`${query}\`, '${currentMode}')" 
                             id="${aiMsgId}-save-btn"
@@ -195,7 +198,6 @@
                     </button>
                 </div>
 
-                <!-- Evidence Registry -->
                 <div id="${aiMsgId}-evidence" class="hidden mt-6 pt-4 border-t border-dashed theme-border">
                     <div class="flex items-center justify-between mb-3">
                         <p class="text-[7px] font-bold theme-text-sec uppercase tracking-widest opacity-30">Forensic Source Data</p>
@@ -221,15 +223,19 @@
                 if (searchData.results.length > 0) {
                     const grid = document.getElementById(`${aiMsgId}-grid`);
                     document.getElementById(`${aiMsgId}-evidence`).classList.remove('hidden');
-                    grid.innerHTML = searchData.results.slice(0, 4).map(res => `
-                        <div class="p-3.5 rounded-xl bg-gray-50/50 dark:bg-gray-800/50 border theme-border cursor-pointer hover:border-blue-500 transition-all" onclick="inspectDocument(${res.id})">
-                            <div class="flex items-center justify-between mb-1.5">
-                                <span class="text-[8px] font-bold text-blue-600 uppercase tracking-widest">${res.tag}</span>
-                                <span class="text-[8px] theme-text-sec opacity-40">#${res.id}</span>
+                    grid.innerHTML = searchData.results.slice(0, 4).map(res => {
+                        // Cache thematic data for inspector
+                        thematicCache[res.id] = res;
+                        return `
+                            <div class="p-3.5 rounded-xl bg-gray-50/50 dark:bg-gray-800/50 border theme-border cursor-pointer hover:border-blue-500 transition-all" onclick="inspectDocument(${res.id})">
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <span class="text-[7px] font-bold text-blue-600 uppercase tracking-widest bg-blue-50 dark:bg-blue-900/20 px-1.5 py-0.5 rounded border border-blue-100 dark:border-blue-800">${res.tag}</span>
+                                    <span class="text-[7px] theme-text-sec opacity-40">#${res.id}</span>
+                                </div>
+                                <p class="text-[11px] theme-text-sec line-clamp-2 opacity-70 leading-relaxed">${res.content}</p>
                             </div>
-                            <p class="text-[11px] theme-text-sec line-clamp-2 opacity-70 leading-relaxed">${res.content}</p>
-                        </div>
-                    `).join('');
+                        `;
+                    }).join('');
                 }
             }
             
@@ -248,6 +254,7 @@
                 const { done, value } = await reader.read();
                 if (done) break;
                 fullText += decoder.decode(value);
+                if (fullText.length > 0) document.getElementById(`${aiMsgId}-bubble`).classList.remove('hidden');
                 contentEl.innerHTML = marked.parse(fullText);
                 thread.scrollTop = thread.scrollHeight;
                 statusEl.innerText = "Responding...";
@@ -267,7 +274,7 @@
     async function saveInsight(aiMsgId, query, mode) {
         const contentEl = document.getElementById(`${aiMsgId}-content`);
         const btn = document.getElementById(`${aiMsgId}-save-btn`);
-        const content = contentEl.innerText; // Plain text cleaning
+        const content = contentEl.innerText;
 
         try {
             btn.innerHTML = `<div class="w-2.5 h-2.5 border border-blue-600 border-t-transparent rounded-full animate-spin"></div><span>Saving...</span>`;
@@ -278,7 +285,7 @@
             });
             const data = await response.json();
             if (data.status === 'success') {
-                btn.className = 'px-3 py-1.5 bg-green-500 text-white rounded-full text-[8px] font-bold uppercase tracking-widest shadow-sm flex items-center gap-2';
+                btn.className = 'px-3 py-1.5 bg-green-500 text-white rounded-md text-[7px] font-bold uppercase tracking-widest shadow-sm flex items-center gap-2';
                 btn.innerHTML = `<svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg><span>Saved to Archive</span>`;
                 btn.onclick = null;
                 showToast('Insight committed to forensic registry.', 'success');
@@ -295,22 +302,39 @@
         try {
             const response = await fetch(`/api/docs/${id}`);
             const data = await response.json();
+            const thematic = thematicCache[id] || {};
+
             inspector.innerHTML = `
                 <div class="space-y-8 message-bubble">
                     <section class="space-y-4">
-                        <h4 class="text-[9px] font-bold theme-text-sec uppercase tracking-widest opacity-40">Document Metadata</h4>
-                        <div class="grid grid-cols-1 gap-3">
-                            <div class="p-4 rounded-xl border theme-border bg-gray-50/50 dark:bg-gray-800/50">
-                                <p class="text-[8px] font-bold theme-text-sec uppercase mb-1">Creation Date</p>
-                                <p class="text-xs theme-text font-medium">${data.created_at}</p>
+                        <h4 class="text-[9px] font-bold theme-text-sec uppercase tracking-widest opacity-40">Thematic Matrices</h4>
+                        <div class="space-y-4">
+                            <div class="p-4 rounded-xl border theme-border bg-blue-600/5">
+                                <div class="flex items-center justify-between mb-2">
+                                    <p class="text-[8px] font-bold text-blue-600 uppercase tracking-widest">LDA Topic</p>
+                                    <span class="text-[7px] font-bold theme-text opacity-30 uppercase italic">Dynamic</span>
+                                </div>
+                                <p class="text-xs theme-text font-bold mb-3">${thematic.lda_topic_label || 'Unlabeled'}</p>
+                                <div class="flex flex-wrap gap-1.5">
+                                    ${Object.keys(thematic.lda_keywords || {}).map(kw => `
+                                        <span class="text-[7px] px-1.5 py-0.5 bg-white dark:bg-gray-800 border theme-border theme-text opacity-60 rounded capitalize">${kw}</span>
+                                    `).join('')}
+                                </div>
                             </div>
-                            <div class="p-4 rounded-xl border theme-border bg-gray-50/50 dark:bg-gray-800/50">
-                                <p class="text-[8px] font-bold theme-text-sec uppercase mb-1">Source Language</p>
-                                <p class="text-xs theme-text font-medium uppercase tracking-widest">${data.language}</p>
+                            <div class="p-4 rounded-xl border theme-border bg-purple-600/5">
+                                <div class="flex items-center justify-between mb-2">
+                                    <p class="text-[8px] font-bold text-purple-600 uppercase tracking-widest">BERT Context</p>
+                                    <span class="text-[7px] font-bold theme-text opacity-30 uppercase italic">Contextual</span>
+                                </div>
+                                <p class="text-xs theme-text font-bold mb-3">${thematic.bert_topic_label || 'Unprocessed'}</p>
+                                <div class="flex flex-wrap gap-1.5">
+                                    ${(thematic.bert_keywords || []).map(kw => `
+                                        <span class="text-[7px] px-1.5 py-0.5 bg-white dark:bg-gray-800 border theme-border theme-text opacity-60 rounded capitalize">${kw}</span>
+                                    `).join('')}
+                                </div>
                             </div>
                         </div>
                     </section>
-                    
                     <section class="space-y-3 pt-6 border-t theme-border">
                         <h4 class="text-[9px] font-bold theme-text-sec uppercase tracking-widest opacity-40">Forensic Controls</h4>
                         <div class="flex flex-col gap-2">

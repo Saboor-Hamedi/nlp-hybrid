@@ -226,12 +226,32 @@ async def api_search(
                 lda_id = await anyio.to_thread.run_sync(predict_topic, r[1], lda_model, dictionary)
                 bert_id = await anyio.to_thread.run_sync(predict_bert_topic, r[1], model, bert_kmeans)
                 
+                # 1. Dynamic LDA Labels (Probabilistic)
+                topic_words = lda_model.show_topic(lda_id, topn=10)
+                lda_keywords_dict = {word: float(prob) for word, prob in topic_words}
+                lda_label = ", ".join([word for word, _ in topic_words[:3]])
+                
+                # 2. Dynamic BERT Labels (Contextual)
+                # bert_topics is a list of (id, keywords_string)
+                bert_keywords_str = bert_topics[bert_id][1] if bert_id < len(bert_topics) else ""
+                bert_keywords_list = [k.strip() for k in bert_keywords_str.split(",")]
+                bert_label = ", ".join(bert_keywords_list[:3]) if bert_keywords_list else f"Context {bert_id + 1}"
+                
                 formatted.append({
-                    "id": r[0], "content": r[1], "score": r[2],
-                    "tag": f"LDA-{lda_id+1} | BERT-{bert_id+1}",
+                    "id": r[0], 
+                    "content": r[1], 
+                    "score": r[2],
+                    "tag": f"LDA: {lda_label}",
+                    "lda_topic_label": lda_label,
+                    "bert_topic_label": bert_label,
+                    "lda_keywords": lda_keywords_dict,
+                    "bert_keywords": bert_keywords_list,
                     "created_at": r[4]
                 })
-        except:
+        except Exception as e:
+            print(f"⚠️ THEMATIC ERROR: {e}")
+            import traceback
+            traceback.print_exc()
             for r in results:
                 formatted.append({"id": r[0], "content": r[1], "score": r[2], "tag": "Unprocessed", "created_at": r[4]})
     
