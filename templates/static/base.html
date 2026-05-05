@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Theme Assets -->
@@ -21,9 +26,7 @@
     
     <!-- Mobile Sidebar Overlay -->
     <div id="sidebar-overlay" class="fixed inset-0 bg-gray-900/10 backdrop-blur-[2px] z-30 hidden md:hidden"></div>
-    
-    <script src="/static/settings.js"></script>
-    <script src="/static/commandpalette.js"></script>
+
 
     <!-- Sidebar -->
     <aside id="sidebar" class="fixed md:relative w-64 border-r flex flex-col justify-between h-full z-40 hidden-mobile md:translate-x-0 theme-border">
@@ -103,9 +106,6 @@
             </div>
         </header>
 
-        <!-- Toast Container -->
-        <div id="toast-container" class="fixed bottom-8 right-8 z-[100] flex flex-col gap-3"></div>
-
         <!-- Content Area -->
         <main class="flex-1 overflow-y-auto p-6 md:p-10 custom-scrollbar theme-bg">
             <div class="max-w-5xl mx-auto">
@@ -114,28 +114,13 @@
         </main>
     </div>
 
+    {% include 'static/notification.html' %}
+    
+    <script src="/static/settings.js"></script>
+    <script src="/static/commandpalette.js"></script>
+    <script src="/static/notification.js"></script>
+
     <script>
-        // Global Toast System
-        window.showToast = function(message, type = 'info') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = `px-5 py-3 rounded-xl shadow-lg border theme-border theme-bg theme-text text-[10px] font-bold uppercase tracking-widest flex items-center gap-3 modal-enter`;
-            
-            const iconColor = type === 'success' ? 'text-green-500' : (type === 'error' ? 'text-red-500' : 'text-blue-500');
-            
-            toast.innerHTML = `
-                <div class="w-2 h-2 rounded-full ${iconColor.replace('text-', 'bg-')}"></div>
-                ${message}
-            `;
-            
-            container.appendChild(toast);
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateY(10px)';
-                toast.style.transition = 'all 0.3s ease';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        };
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('sidebar-overlay');
         const profileTrigger = document.getElementById('profile-trigger');

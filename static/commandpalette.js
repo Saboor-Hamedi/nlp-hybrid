@@ -4,7 +4,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const triggerSearch = document.getElementById('trigger-search');
     const paletteResults = document.getElementById('search-results');
 
-    if (!searchModal || !triggerSearch) return;
+    if (!searchModal || !triggerSearch) {
+        console.error('Command Palette components not found:', { searchModal, triggerSearch });
+        return;
+    }
+    
+    console.log('Command Palette initialized');
 
     let selectedIndex = -1;
 

@@ -29,9 +29,7 @@
                     <div class="w-1 h-5 bg-blue-600 rounded-full"></div>
                     <h2 class="text-sm font-bold theme-text m-0 uppercase tracking-widest">Primary Content</h2>
                 </div>
-                <div class="theme-text opacity-90 leading-relaxed text-sm whitespace-pre-wrap font-light">
-                    {{ result.content }}
-                </div>
+                <div class="theme-text opacity-90 leading-relaxed text-sm whitespace-pre-wrap font-light">{{ result.content.strip() }}</div>
             </div>
         </div>
     </div>

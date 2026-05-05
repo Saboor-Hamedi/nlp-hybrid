@@ -58,6 +58,14 @@
         settingsModal.addEventListener('click', (e) => {
             if (e.target === settingsModal) toggleSettings();
         });
+
+        // Enter to Save logic
+        settingsModal.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
+                e.preventDefault();
+                saveSettings();
+            }
+        });
     }
 
     // Close on Escape key
@@ -68,6 +76,9 @@
     });
 
     window.saveSettings = function() {
+        // Show cleaning notification
+        if (window.showToast) showToast('Initiating forensic cleaning...', 'info');
+        
         // Simulate save
         const btn = document.querySelector('button[onclick="saveSettings()"]');
         if (btn) btn.innerHTML = '<div class="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto"></div>';

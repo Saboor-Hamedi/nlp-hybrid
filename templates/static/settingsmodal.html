@@ -125,15 +125,60 @@
                         </div>
                     </div>
 
-                    <!-- Tab: Forensics -->
-                    <div id="tab-forensics" class="tab-content space-y-6 hidden">
-                        <div class="p-5 rounded-xl border border-red-500/10 bg-red-50/5">
-                            <h4 class="text-[9px] font-bold text-red-500 uppercase tracking-widest mb-2">Cluster Purge
-                            </h4>
-                            <p class="text-[8px] theme-text-sec mb-4 opacity-70">Clear non-correlative document
-                                fragments.</p>
-                            <button
-                                class="px-4 py-1.5 bg-red-500 text-white rounded-lg text-[9px] font-bold uppercase tracking-widest hover:bg-red-600 transition-all">Purge</button>
+                    <!-- Tab: Forensics (Engine) -->
+                    <div id="tab-forensics" class="tab-content space-y-4 hidden">
+                        <div class="space-y-3">
+                            <h4 class="text-[9px] font-bold theme-text-sec uppercase tracking-widest ml-1">Cleaning Modules</h4>
+                            
+                            <!-- Academic Cleaner -->
+                            <div class="flex items-center justify-between p-3 rounded-lg border theme-border bg-gray-50/2">
+                                <div class="space-y-0.5">
+                                    <p class="text-[9px] font-bold theme-text uppercase tracking-widest">Academic Filter</p>
+                                    <p class="text-[8px] theme-text-sec opacity-50">Citations, DOIs, and bibliography artifacts</p>
+                                </div>
+                                {% set toggle_id = 'toggle-clean-academic' %}
+                                {% set onchange = '' %}
+                                {% include 'static/toggle.html' %}
+                            </div>
+
+                            <!-- PDF Artifact Cleaner -->
+                            <div class="flex items-center justify-between p-3 rounded-lg border theme-border bg-gray-50/2">
+                                <div class="space-y-0.5">
+                                    <p class="text-[9px] font-bold theme-text uppercase tracking-widest">OCR & PDF Repair</p>
+                                    <p class="text-[8px] theme-text-sec opacity-50">CID markers, line-breaks, and page metadata</p>
+                                </div>
+                                {% set toggle_id = 'toggle-clean-pdf' %}
+                                {% set onchange = '' %}
+                                {% include 'static/toggle.html' %}
+                            </div>
+
+                            <!-- Math & Symbol Cleaner -->
+                            <div class="flex items-center justify-between p-3 rounded-lg border theme-border bg-gray-50/2">
+                                <div class="space-y-0.5">
+                                    <p class="text-[9px] font-bold theme-text uppercase tracking-widest">Symbol Purge</p>
+                                    <p class="text-[8px] theme-text-sec opacity-50">Matrix artifacts, Greek variables, and math notation</p>
+                                </div>
+                                {% set toggle_id = 'toggle-clean-math' %}
+                                {% set onchange = '' %}
+                                {% include 'static/toggle.html' %}
+                            </div>
+
+                            <!-- Numerical Cleaner -->
+                            <div class="flex items-center justify-between p-3 rounded-lg border theme-border bg-gray-50/2">
+                                <div class="space-y-0.5">
+                                    <p class="text-[9px] font-bold theme-text uppercase tracking-widest">Numerical Filter</p>
+                                    <p class="text-[8px] theme-text-sec opacity-50">Standalone digits and attached number artifacts</p>
+                                </div>
+                                {% set toggle_id = 'toggle-clean-num' %}
+                                {% set onchange = '' %}
+                                {% include 'static/toggle.html' %}
+                            </div>
+                        </div>
+
+                        <div class="p-4 rounded-lg border border-red-500/20 bg-red-50/5 mt-6">
+                            <h4 class="text-[9px] font-bold text-red-500 uppercase tracking-widest mb-1">Advanced: Cluster Purge</h4>
+                            <p class="text-[8px] theme-text-sec mb-3 opacity-70">Clear all non-correlative document fragments from the engine.</p>
+                            <button class="px-4 py-1.5 bg-red-500 text-white rounded-[5px] text-[9px] font-bold uppercase tracking-widest hover:bg-red-600 transition-all">Execute Purge</button>
                         </div>
                     </div>
 
