@@ -1,0 +1,49 @@
+/* Neural Forensic Suite - Theme System (DRY variables) */
+:root {
+    /* Light Theme Palette */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f9fafb;
+    --bg-tertiary: #f3f4f6;
+    --text-primary: #111827;
+    --text-secondary: #4b5563;
+    --text-tertiary: #9ca3af;
+    --border-color: #f3f4f6;
+    --bg-hover: #f9fafb;
+    --accent-blue: #2563eb;
+    --accent-green: #10b981;
+    --glass-bg: rgba(255, 255, 255, 0.9);
+    --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.dark {
+    /* Dark Theme Palette */
+    --bg-primary: #0b0f19;
+    --bg-secondary: #111827;
+    --bg-tertiary: #1f2937;
+    --text-primary: #f9fafb;
+    --text-secondary: #d1d5db;
+    --text-tertiary: #6b7280;
+    --border-color: #1f2937;
+    --bg-hover: #1f2937;
+    --accent-blue: #3b82f6;
+    --accent-green: #34d399;
+    --glass-bg: rgba(11, 15, 25, 0.9);
+    --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+}
+
+/* Base resets using variables */
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Utility overrides for Tailwind-like behavior with variables */
+.theme-bg { background-color: var(--bg-primary) !important; }
+.theme-bg-sec { background-color: var(--bg-secondary) !important; }
+.theme-bg-tert { background-color: var(--bg-tertiary) !important; }
+.theme-text { color: var(--text-primary) !important; }
+.theme-text-sec { color: var(--text-secondary) !important; }
+.theme-border { border-color: var(--border-color) !important; }
+.theme-hover:hover { background-color: var(--bg-hover) !important; }
+.theme-glass { background: var(--glass-bg) !important; backdrop-filter: blur(8px); }

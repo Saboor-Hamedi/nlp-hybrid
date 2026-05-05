@@ -1,0 +1,7 @@
+<!-- Standalone Toggle Component -->
+<label class="switch">
+    <input type="checkbox" id="{{ toggle_id|default('generic-toggle') }}" 
+           {% if checked %}checked{% endif %} 
+           onchange="{{ onchange|default('') }}">
+    <span class="slider round"></span>
+</label>

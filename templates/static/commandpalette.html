@@ -1,0 +1,55 @@
+<!-- Command Palette (Ctrl+K) -->
+<div id="search-modal" class="search-modal-backdrop fixed inset-0 z-[60] bg-gray-900/40 backdrop-blur-[4px]">
+    <div class="bg-white theme-bg w-full max-w-xl rounded-2xl shadow-xl border theme-border overflow-hidden flex flex-col modal-enter mx-auto">
+        <!-- Premium Palette Header -->
+        <div class="px-5 py-4 border-b theme-border flex items-center justify-between bg-gray-50/5">
+            <div class="flex items-center gap-2.5">
+                <div class="w-1 h-4 bg-blue-600 rounded-full"></div>
+                <h2 class="text-[10px] font-bold theme-text uppercase tracking-[0.2em]">Neural Command Center</h2>
+            </div>
+            <div class="flex items-center gap-1.5">
+                <span class="kbd-key theme-bg theme-text border theme-border">ESC</span>
+                <span class="text-[9px] font-bold theme-text-sec opacity-40 uppercase tracking-widest">to close</span>
+            </div>
+        </div>
+
+        <!-- Search Input -->
+        <div class="relative group">
+            <div class="absolute inset-y-0 left-5 flex items-center pointer-events-none">
+                <svg class="w-4 h-4 theme-text-sec opacity-40 group-focus-within:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+            <input type="text" id="command-search" placeholder="Type to search archive..." 
+                   class="w-full pl-12 pr-5 py-5 theme-bg theme-text text-sm border-none focus:ring-0 placeholder-gray-400 font-light" 
+                   autocomplete="off">
+        </div>
+
+        <!-- Results Area -->
+        <div id="search-results" class="max-h-[400px] overflow-y-auto custom-scrollbar border-t theme-border bg-gray-50/2">
+            <!-- Dynamic items go here -->
+            <div class="p-12 text-center">
+                <p class="text-[10px] font-bold theme-text-sec uppercase tracking-[0.2em] opacity-30">Waiting for forensic input...</p>
+            </div>
+        </div>
+
+        <!-- Palette Footer -->
+        <div class="px-5 py-3 border-t theme-border bg-gray-50/5 flex items-center justify-between">
+            <div class="flex items-center gap-6">
+                <div class="flex items-center gap-2">
+                    <span class="flex gap-1">
+                        <span class="kbd-key theme-bg theme-text border theme-border">↑</span>
+                        <span class="kbd-key theme-bg theme-text border theme-border">↓</span>
+                    </span>
+                    <span class="text-[9px] font-bold theme-text-sec opacity-40 uppercase tracking-widest">Navigate</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="kbd-key theme-bg theme-text border theme-border">ENTER</span>
+                    <span class="text-[9px] font-bold theme-text-sec opacity-40 uppercase tracking-widest">Open</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="w-1 h-1 bg-green-500 rounded-full animate-pulse"></span>
+                <span class="text-[9px] font-bold theme-text-sec opacity-60 uppercase tracking-widest">Engine Active</span>
+            </div>
+        </div>
+    </div>
+</div>

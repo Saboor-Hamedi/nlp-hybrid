@@ -19,6 +19,40 @@ try:
 except Exception as e:
     print("Error loading .env:", e)
 
+import asyncpg
+
+_pool = None
+
+async def get_db_pool():
+    """
+    Returns a singleton asyncpg connection pool.
+    """
+    global _pool
+    if _pool is None:
+        try:
+            db_host = os.getenv("DB_HOST", "127.0.0.1")
+            # If localhost hangs on Windows, 127.0.0.1 is usually safer for asyncpg
+            if db_host == "localhost":
+                db_host = "127.0.0.1"
+                
+            db_port = int(os.getenv("DB_PORT", 5432))
+            
+            _pool = await asyncpg.create_pool(
+                host=db_host,
+                port=db_port,
+                database=os.getenv("DB_NAME"),
+                user=os.getenv("DB_USER"),
+                password=os.getenv("DB_PASSWORD"),
+                min_size=1,
+                max_size=10,
+                command_timeout=60
+            )
+            print("✅ Async database pool initialized.")
+        except Exception as e:
+            print(f"Error creating asyncpg pool: {e}")
+            return None
+    return _pool
+
 def db_connection():
     """
     Creates and returns a connection to the PostgreSQL database using environment variables.

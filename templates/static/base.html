@@ -1,37 +1,172 @@
 <!DOCTYPE html>
 <html lang="en" class="h-full">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
-    <title>{% block title %} Hybrid Search Engine {% endblock %}</title>
-    <style>
-        /* Smooth scrolling for a better UX */
-        html {
-            scroll-behavior: smooth;
-        }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Theme Assets -->
+    <link rel="stylesheet" href="/static/theme.css">
+    <link rel="stylesheet" href="/static/app.css">
+    <script src="/static/theme.js"></script>
+
+    <title>{% block title %}Neural Forensic Suite{% endblock %}</title>
 </head>
+<body class="flex h-screen overflow-hidden">
+    
+    <!-- Modular Components -->
+    {% include 'static/commandpalette.html' %}
+    {% include 'static/settingsmodal.html' %}
+    
+    <!-- Mobile Sidebar Overlay -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-gray-900/10 backdrop-blur-[2px] z-30 hidden md:hidden"></div>
+    
+    <script src="/static/settings.js"></script>
+    <script src="/static/commandpalette.js"></script>
 
-<body class="flex flex-col min-h-full bg-gray-50 font-sans antialiased text-gray-900 wrap-break-word">
-
-
-    <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-
-        <div class="flex flex-col">
-            {% block content %}
-            {% endblock %}
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed md:relative w-64 border-r flex flex-col justify-between h-full z-40 hidden-mobile md:translate-x-0 theme-border">
+        <div>
+            <div class="h-16 flex items-center px-6 border-b theme-border">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 bg-blue-600 rounded flex items-center justify-center">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    </div>
+                    <span class="text-lg font-bold tracking-tight theme-text">Neural<span class="text-blue-600">Core</span></span>
+                </div>
+            </div>
+            
+            <nav class="p-4 space-y-0.5">
+                <p class="px-3 text-[10px] font-bold theme-text-sec uppercase tracking-widest mb-3 mt-2 opacity-50">Laboratory</p>
+                <a href="/" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                    Archive
+                </a>
+                <a href="/topics" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path></svg>
+                    Thematic
+                </a>
+                <a href="/modeling" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                    Signals
+                </a>
+            </nav>
         </div>
-
-    </main>
-
-    <footer class="bg-white border-t border-gray-200 py-6">
-        <div class="max-w-7xl mx-auto px-4 text-center text-sm text-gray-500">
-            &copy; 2026 Hybrid Search Engine. All rights reserved.
+        
+        <div class="p-4 border-t theme-border flex flex-col gap-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded theme-bg-sec border theme-border flex items-center justify-center theme-text font-bold text-[10px]">SH</div>
+                    <div class="text-[10px]">
+                        <p class="font-bold theme-text">Saboor Hamedi</p>
+                        <p class="theme-text-sec opacity-60 uppercase tracking-tighter">Researcher</p>
+                    </div>
+                </div>
+                <button onclick="toggleSettings()" class="w-8 h-8 rounded theme-bg-sec border theme-border flex items-center justify-center theme-text-sec hover:text-blue-500 transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                </button>
+            </div>
         </div>
-    </footer>
+    </aside>
 
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col h-full overflow-hidden">
+        
+        <!-- Header -->
+        <header class="h-16 glass-header flex items-center px-6 z-30 theme-glass">
+            <div class="flex-1 md:hidden">
+                <button id="open-sidebar" class="p-2 rounded-lg theme-text opacity-70">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+            </div>
+
+            <div class="flex-[3] flex justify-center px-2">
+                <button id="trigger-search" class="w-full max-w-md flex items-center justify-between gap-3 px-4 py-2 theme-bg-sec border theme-border rounded-xl hover:shadow-sm transition-all group">
+                    <div class="flex items-center gap-3">
+                        <svg class="w-4 h-4 theme-text-sec opacity-40 group-hover:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        <span class="text-xs theme-text-sec opacity-60">Search forensic archive...</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 px-1.5 py-1 rounded bg-white theme-bg border theme-border">
+                        <span class="text-[9px] font-bold theme-text-sec opacity-40">⌃ K</span>
+                    </div>
+                </button>
+            </div>
+
+            <div class="flex-1 flex justify-end items-center gap-4">
+                <div class="relative">
+                    <button id="profile-trigger" class="w-8 h-8 rounded-full theme-bg-sec border theme-border flex items-center justify-center theme-text font-bold text-[10px] hover:border-blue-500 transition-all">
+                        SH
+                    </button>
+                    {% include 'static/dropdown.html' %}
+                </div>
+            </div>
+        </header>
+
+        <!-- Toast Container -->
+        <div id="toast-container" class="fixed bottom-8 right-8 z-[100] flex flex-col gap-3"></div>
+
+        <!-- Content Area -->
+        <main class="flex-1 overflow-y-auto p-6 md:p-10 custom-scrollbar theme-bg">
+            <div class="max-w-5xl mx-auto">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Global Toast System
+        window.showToast = function(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `px-5 py-3 rounded-xl shadow-lg border theme-border theme-bg theme-text text-[10px] font-bold uppercase tracking-widest flex items-center gap-3 modal-enter`;
+            
+            const iconColor = type === 'success' ? 'text-green-500' : (type === 'error' ? 'text-red-500' : 'text-blue-500');
+            
+            toast.innerHTML = `
+                <div class="w-2 h-2 rounded-full ${iconColor.replace('text-', 'bg-')}"></div>
+                ${message}
+            `;
+            
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(10px)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        };
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        const profileTrigger = document.getElementById('profile-trigger');
+        const profileDropdown = document.getElementById('profile-dropdown');
+
+        // Sidebar logic
+        function toggleSidebar() {
+            sidebar.classList.toggle('hidden-mobile');
+            sidebar.classList.toggle('visible-mobile');
+            overlay.classList.toggle('hidden');
+        }
+        document.getElementById('open-sidebar').addEventListener('click', toggleSidebar);
+        overlay.addEventListener('click', toggleSidebar);
+
+        // Profile Dropdown logic
+        profileTrigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            profileDropdown.classList.toggle('hidden');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!profileDropdown.contains(e.target) && e.target !== profileTrigger) {
+                profileDropdown.classList.add('hidden');
+            }
+        });
+
+        // Active link highlighting
+        const currentPath = window.location.pathname;
+        document.querySelectorAll('.sidebar-item').forEach(link => {
+            if(link.getAttribute('href') === currentPath) link.classList.add('active');
+        });
+    </script>
 </body>
-
 </html>

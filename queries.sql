@@ -99,7 +99,7 @@ BEGIN
     result := REGEXP_REPLACE(result, '\(cid:\d+\)', ' ', 'g');
     result := REGEXP_REPLACE(result, '\[\]', ' ', 'g');
     result := REGEXP_REPLACE(result, '\[\d+\]', ' ', 'g');
-    result := REGEXP_REPLACE(result, '[⊗¡\*]', ' ', 'g');
+    result := REGEXP_REPLACE(result, '[⊗¡\*∗†‡§¶‖]', ' ', 'g'); -- Math/special symbols & Author marks
     
     -- Messy Symbols (Replace with space)
     result := REGEXP_REPLACE(result, '[%±τ_—]', ' ', 'g');
@@ -150,13 +150,16 @@ BEGIN
     result := REGEXP_REPLACE(result, '\d+\M', '', 'g');
     
     -- ============================================
-    -- SINGLE LETTER CLEANUP (REPLACE WITH SPACE)
+    -- SINGLE LETTER & MATH VARIABLE CLEANUP
     -- ============================================
     
-    -- Remove single letters (but keep 'a' and 'I' as valid words)
-    result := REGEXP_REPLACE(result, '\s+[bcdefghjklmnopqrstuvwxyz]\s+', ' ', 'gi');
-    result := REGEXP_REPLACE(result, '^[bcdefghjklmnopqrstuvwxyz]\s+', '', 'gi');
-    result := REGEXP_REPLACE(result, '\s+[bcdefghjklmnopqrstuvwxyz]$', '', 'gi');
+    -- Remove single letters (Keep ONLY 'a' as a valid word, delete 'i' because in academic papers 'i' is an index)
+    result := REGEXP_REPLACE(result, '\s+[bcdefghijklmnopqrstuvwxyz]\s+', ' ', 'gi');
+    result := REGEXP_REPLACE(result, '^[bcdefghijklmnopqrstuvwxyz]\s+', '', 'gi');
+    result := REGEXP_REPLACE(result, '\s+[bcdefghijklmnopqrstuvwxyz]$', '', 'gi');
+    
+    -- Remove isolated 2-letter math variables left over from subscripts (wt, ct, bt, xt, yt, zt, mt, nt, st, xk, mk, etc.)
+    result := REGEXP_REPLACE(result, '\y(wt|ct|bt|xt|yt|zt|mt|nt|st|pt|xk|yk|zk|mk|nk|ij|ji)\y', ' ', 'gi');
     
     -- Remove single letters with periods (c., A.)
     result := REGEXP_REPLACE(result, '\y[a-zA-Z]\.\s*', ' ', 'gi');
@@ -279,8 +282,12 @@ VACUUM ANALYZE document_embedding;
 
 -- Replace 
 UPDATE document 
-SET content = REGEXP_REPLACE(content, '→ ', '', 'g')
-WHERE content ~ '→';
+SET content = REGEXP_REPLACE(content, 'ragstyle',
+'rag style', 'g')
+WHERE content ~ 'ragstyle';
+SELECT * FROM document order by RANDOM() LIMIT 100;
+-- swuggy invocab and outofvoca
+
 
 UPDATE document 
 SET content = REPLACE(REPLACE(REPLACE(content, 

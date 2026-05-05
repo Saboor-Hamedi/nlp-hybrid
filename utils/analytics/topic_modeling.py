@@ -24,6 +24,14 @@ try:
 except LookupError:
     nltk.download('wordnet', quiet=True)
 
+# Eagerly load resources to prevent ThreadPoolExecutor issues on Windows
+from nltk.corpus import wordnet, stopwords
+try:
+    wordnet.ensure_loaded()
+    stopwords.ensure_loaded()
+except Exception:
+    pass
+
 
 def find_best_k(documents, k_range=range(2, 8), timeout=30):
     """
@@ -105,40 +113,48 @@ def find_best_k(documents, k_range=range(2, 8), timeout=30):
 
 
 def plot_coherence(coherence_scores, best_k=None):
-    """Plot coherence scores across different k values."""
+    """Plot coherence scores across different k values with minimalist aesthetics."""
     try:
         k_values = list(coherence_scores.keys())
         scores = list(coherence_scores.values())
 
         if not k_values or not scores:
-            print("No coherence scores to plot")
             return
 
         if best_k is None:
             best_k = max(coherence_scores, key=coherence_scores.get)
         best_score = coherence_scores[best_k]
 
-        # Make the graph shorter and more beautiful
-        plt.figure(figsize=(8, 2.5))
-        plt.plot(k_values, scores, marker='o', linestyle='-', color='#4F46E5', linewidth=2.5, markersize=8)
+        # Subtle, minimalist plotting
+        plt.figure(figsize=(10, 4), facecolor='white')
         
-        # Highlight the best k value
-        plt.plot(best_k, best_score, marker='*', color='#10B981', markersize=14, label=f'Best k = {best_k}')
+        # Plot main line with soft blue
+        plt.plot(k_values, scores, marker='o', linestyle='-', color='#3b82f6', 
+                 linewidth=1.5, markersize=5, markerfacecolor='white', markeredgewidth=1.5, alpha=0.8)
         
-        plt.xlabel('Number of Topics (k)', fontsize=11, fontweight='500', color='#374151')
-        plt.ylabel('Coherence Score (u_mass)', fontsize=11, fontweight='500', color='#374151')
-        plt.title(f'Optimal Topic Count: k = {best_k}', fontsize=14, fontweight='bold', color='#1F2937', pad=15)
+        # Highlight best k with a subtle green dot
+        plt.plot(best_k, best_score, marker='o', color='#10b981', markersize=8, 
+                 markerfacecolor='#10b981', markeredgecolor='white', markeredgewidth=2, label=f'Optimal k={best_k}')
         
-        # Clean up borders and add grid
-        plt.grid(True, linestyle='--', alpha=0.6, color='#E5E7EB')
-        plt.gca().spines['top'].set_visible(False)
-        plt.gca().spines['right'].set_visible(False)
-        plt.legend(loc='best', frameon=False)
+        # Typography and labels
+        plt.title('Thematic Coherence Optimization', fontsize=11, fontweight='600', color='#111827', pad=20, loc='left')
+        plt.xlabel('Cluster Count (k)', fontsize=9, fontweight='500', color='#6b7280')
+        plt.ylabel('Coherence Index', fontsize=9, fontweight='500', color='#6b7280')
+        
+        # Refine axes
+        ax = plt.gca()
+        ax.tick_params(axis='both', which='major', labelsize=8, colors='#9ca3af')
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['left'].set_color('#e5e7eb')
+        ax.spines['bottom'].set_color('#e5e7eb')
+        
+        plt.legend(loc='upper right', frameon=False, fontsize=8)
+        plt.tight_layout()
 
         import os
         os.makedirs('static', exist_ok=True)
-        plt.savefig('static/coherence_scores.png', dpi=100, bbox_inches='tight')
-        print("✓ Coherence plot saved as 'static/coherence_scores.png'")
+        plt.savefig('static/coherence_scores.png', dpi=150, bbox_inches='tight', transparent=True)
         plt.close()
     except Exception as e:
         print(f"Error plotting coherence: {e}")

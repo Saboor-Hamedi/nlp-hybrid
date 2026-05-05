@@ -1,86 +1,85 @@
 {% extends 'static/base.html' %}
-{% block title %} Topics - Hybrid Search Engine {% endblock %}
-{% include 'static/header.html'%}
+
+{% block title %} AI Topic Discovery - Neural Forensic Suite {% endblock %}
+
 {% block content %}
-<div class="max-w-6xl mx-auto bg-white shadow-xl rounded-lg p-8">
-    <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">AI Topic Discovery</h1>
 
-    <!-- Coherence Score Graph -->
-    <div class="mb-12 p-6 bg-gray-50 rounded-lg border border-gray-200">
-        <h2 class="text-2xl font-bold text-gray-800 mb-4">Topic Model Coherence</h2>
-        {% if coherence_image %}
-        <img src="{{ coherence_image }}" alt="Coherence Scores" class="max-w-full mx-auto rounded-lg shadow-md">
-        {% else %}
-        <p class="text-gray-600 text-center italic">Coherence graph will appear here after analysis</p>
-        {% endif %}
-    </div>
+<div class="mb-10 px-2">
+    <h1 class="text-sm font-bold theme-text uppercase tracking-widest mb-2">Thematic Discovery</h1>
+    <p class="text-xs theme-text-sec opacity-70">Autonomous pattern recognition across the forensic document cluster.</p>
+</div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <!-- LDA Topics -->
-        <div>
-            <h2 class="text-2xl font-bold text-indigo-700 mb-4 border-b-2 border-indigo-100 pb-2">LDA (Probabilistic)
-            </h2>
-            <div class="space-y-4">
-                {% for topic_id, words in lda_topics %}
-                <div class="p-4 border-l-4 border-indigo-500 bg-indigo-50 rounded-r-lg">
-                    <h3 class="text-lg font-semibold text-indigo-700">Topic #{{ topic_id + 1 }}</h3>
-                    <p class="text-gray-600 mt-1 italic text-sm">{{ words }}</p>
-                </div>
-                {% endfor %}
+<!-- Optimization Metrics Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
+    <!-- Coherence Visualization -->
+    <div class="lg:col-span-2 theme-bg rounded-xl border theme-border p-6 flex flex-col justify-center min-h-[300px]">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-[10px] font-bold theme-text-sec uppercase tracking-widest">Coherence Benchmark</h2>
+            <div class="flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                <span class="text-[10px] font-bold text-green-600 uppercase tracking-widest">Optimal: k={{ best_k }}</span>
             </div>
         </div>
-
-        <!-- BERT Topics -->
-        <div>
-            <h2 class="text-2xl font-bold text-emerald-700 mb-4 border-b-2 border-emerald-100 pb-2">BERT (Contextual)
-            </h2>
-            <div class="space-y-4">
-                {% for topic_id, words in bert_topics %}
-                <div class="p-4 border-l-4 border-emerald-500 bg-emerald-50 rounded-r-lg">
-                    <h3 class="text-lg font-semibold text-emerald-700">Topic #{{ topic_id + 1 }}</h3>
-                    <p class="text-gray-600 mt-1 italic text-sm">{{ words }}</p>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
+        <img src="{{ coherence_image }}" alt="Optimization Plot" class="w-full opacity-90 hover:opacity-100 transition-opacity filter dark:invert dark:hue-rotate-180">
     </div>
 
-    <!-- Document Breakdown -->
-    <div class="mt-12">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b-2 border-gray-100 pb-2">Document Tagging Comparison
-        </h2>
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Document Content</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">LDA
-                            Tag</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">BERT
-                            Tag</th>
+    <!-- Optimization Data Grid -->
+    <div class="theme-bg rounded-xl border theme-border overflow-hidden flex flex-col">
+        <div class="p-4 border-b theme-border bg-gray-50/10">
+            <h2 class="text-[10px] font-bold theme-text uppercase tracking-widest">Metrics Table</h2>
+        </div>
+        <div class="flex-1 overflow-y-auto">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="text-[9px] font-bold theme-text-sec uppercase tracking-widest border-b theme-border">
+                        <th class="px-5 py-3">Cluster (k)</th>
+                        <th class="px-5 py-3">Coherence</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    {% for doc in documents %}
-                    <tr>
-                        <td class="px-6 py-4">
-                            <div class="text-sm text-gray-900 line-clamp-2">{{ doc.content }}</div>
-                            <div class="mt-2 text-xs text-gray-400 font-mono line-clamp-2" title="Preprocessed Tokens (Sent to AI)">
-                                <span class="font-bold text-gray-500">Tokens:</span> {{ doc.tokens }}
+                <tbody class="divide-y theme-border">
+                    {% for k, score in coherence_scores.items() %}
+                    <tr class="{% if k == best_k %}bg-green-50/10{% endif %} theme-hover transition-colors">
+                        <td class="px-5 py-3 text-xs font-bold {% if k == best_k %}text-green-500{% else %}theme-text{% endif %}">
+                            k = {{ k }}
+                            {% if k == best_k %}
+                            <span class="ml-1.5 text-[8px] bg-green-500/10 text-green-500 px-1 py-0.5 rounded uppercase tracking-tighter">Best</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-5 py-3 text-xs font-mono {% if k == best_k %}text-green-500{% else %}theme-text-sec{% endif %}">
+                            {{ "%.4f"|format(score) }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="p-4 bg-gray-50/10 border-t theme-border">
+            <p class="text-[9px] theme-text-sec leading-relaxed italic opacity-60">
+                Elbow detection identifies the point where thematic gain plateaus.
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Comparative Modeling Tables -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+    <!-- LDA -->
+    <div class="theme-bg rounded-xl border theme-border overflow-hidden">
+        <div class="p-5 border-b theme-border">
+            <h2 class="text-[10px] font-bold text-purple-500 uppercase tracking-widest">LDA Probabilistic Themes</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <tbody class="divide-y theme-border">
+                    {% for id, words in lda_topics %}
+                    <tr class="theme-hover transition-colors">
+                        <td class="px-6 py-5 w-20 text-[10px] font-bold theme-text-sec uppercase tracking-widest">#{{ id + 1 }}</td>
+                        <td class="px-6 py-5">
+                            <div class="flex flex-wrap gap-1.5">
+                                {% for word in words.split(' + ') %}
+                                <span class="text-[9px] bg-purple-500/10 text-purple-400 px-2 py-0.5 rounded border border-purple-500/20">{{ word.split('*')[1]|replace('"', '') }}</span>
+                                {% endfor %}
                             </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span
-                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-indigo-100 text-indigo-800">
-                                {{ doc.lda_tag }}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span
-                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-emerald-100 text-emerald-800">
-                                {{ doc.bert_tag }}
-                            </span>
                         </td>
                     </tr>
                     {% endfor %}
@@ -89,8 +88,65 @@
         </div>
     </div>
 
-    <div class="mt-8">
-        <a href="/" class="text-blue-500 hover:underline">← Back to Search</a>
+    <!-- BERT -->
+    <div class="theme-bg rounded-xl border theme-border overflow-hidden">
+        <div class="p-5 border-b theme-border">
+            <h2 class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">BERT Contextual Themes</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <tbody class="divide-y theme-border">
+                    {% for id, words in bert_topics %}
+                    <tr class="theme-hover transition-colors">
+                        <td class="px-6 py-5 w-20 text-[10px] font-bold theme-text-sec uppercase tracking-widest">#{{ id + 1 }}</td>
+                        <td class="px-6 py-5">
+                            <div class="flex flex-wrap gap-1.5">
+                                {% for word in words.split(', ') %}
+                                <span class="text-[9px] bg-indigo-500/10 text-indigo-400 px-2 py-0.5 rounded border border-indigo-500/20">{{ word }}</span>
+                                {% endfor %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
+
+<!-- Validation Matrix -->
+<div class="theme-bg rounded-xl border theme-border overflow-hidden mb-12">
+    <div class="p-5 border-b theme-border flex items-center justify-between">
+        <h2 class="text-[10px] font-bold theme-text uppercase tracking-widest">Validation Matrix</h2>
+        <span class="text-[9px] theme-text-sec opacity-60">Sample of {{ documents|length }} documents</span>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left">
+            <thead>
+                <tr class="bg-gray-50/10 text-[9px] font-bold theme-text-sec uppercase tracking-widest border-b theme-border">
+                    <th class="px-6 py-4">Forensic Segment</th>
+                    <th class="px-6 py-4">LDA Signature</th>
+                    <th class="px-6 py-4">BERT Signature</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y theme-border">
+                {% for doc in documents %}
+                <tr class="theme-hover transition-colors">
+                    <td class="px-6 py-6 min-w-[300px]">
+                        <p class="text-[11px] theme-text font-medium mb-1 line-clamp-2">{{ doc.content }}</p>
+                        <p class="text-[9px] theme-text-sec italic font-mono line-clamp-1 opacity-50">{{ doc.tokens }}</p>
+                    </td>
+                    <td class="px-6 py-6">
+                        <span class="inline-flex px-2 py-0.5 rounded text-[9px] bg-purple-500/10 text-purple-400 font-bold border border-purple-500/20">{{ doc.lda_tag }}</span>
+                    </td>
+                    <td class="px-6 py-6">
+                        <span class="inline-flex px-2 py-0.5 rounded text-[9px] bg-indigo-500/10 text-indigo-400 font-bold border border-indigo-500/20">{{ doc.bert_tag }}</span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
 {% endblock %}
