@@ -25,13 +25,19 @@ _pool = None
 
 async def get_db_pool():
     """
-    Returns a singleton asyncpg connection pool.
+    Returns a singleton asyncpg connection pool with auto-recovery logic.
     """
     global _pool
+    # Check if pool exists and is healthy
+    if _pool is not None:
+        # asyncpg internal check for closing/closed states
+        if _pool.is_closing():
+            print("🔄 Database pool is closing. Re-initializing...")
+            _pool = None
+
     if _pool is None:
         try:
             db_host = os.getenv("DB_HOST", "127.0.0.1")
-            # If localhost hangs on Windows, 127.0.0.1 is usually safer for asyncpg
             if db_host == "localhost":
                 db_host = "127.0.0.1"
                 

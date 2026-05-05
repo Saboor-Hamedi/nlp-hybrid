@@ -17,19 +17,25 @@ app = FastAPI(
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     """Global catch-all for unhandled system exceptions."""
-    print(f"🔥 CRITICAL SYSTEM ERROR: {exc}")
-    # If it's an API request, return JSON
-    if request.url.path.startswith("/api/"):
+    err_msg = str(exc)
+    print(f"🔥 CRITICAL SYSTEM ERROR: {err_msg}")
+    
+    # Check if request is for API
+    is_api = request.url.path.startswith("/api/")
+    
+    if is_api:
         return JSONResponse(
             status_code=500,
-            content={"message": "Internal Forensic Engine Error", "detail": str(exc)}
+            content={
+                "message": "Neural Engine Error", 
+                "detail": "Database connection pool is cycling. Please retry in a moment." if "pool is closing" in err_msg else err_msg
+            }
         )
-    # Otherwise return a formatted HTML error (using home as fallback)
-    return templates.TemplateResponse("static/search.html", {
+    
+    # Fallback for HTML pages
+    return templates.TemplateResponse("static/content.html", {
         "request": request,
-        "results": [],
-        "query": "",
-        "error": f"Forensic Engine Failure: {str(exc)}"
+        "error": f"Forensic Engine Failure: {err_msg}"
     })
 
 # Static Asset Configuration

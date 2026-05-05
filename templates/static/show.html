@@ -177,27 +177,43 @@
         const status = document.getElementById('synthesis-status');
         
         try {
+            status.innerText = 'Neural Core active...';
+            
+            // Gather result context for RAG
+            const resultsContext = [{
+                id: {{ result.id }},
+                content: `{{ result.content|replace('"', '\"')|replace('\n', ' ') }}`
+            }];
+
             const response = await fetch('/api/synthesis', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ 
-                    query: "Provide a comprehensive forensic analysis and significance summary of this record.", 
-                    context_docs: [{
-                        id: {{ result.id }},
-                        content: `{{ result.content|replace('"', '\"')|replace('\n', ' ') }}`
-                    }]
+                    query: "Synthesize this forensic record and provide key insights.", 
+                    context_docs: resultsContext,
+                    mode: 'local'
                 })
             });
-            const data = await response.json();
+
+            if (!response.ok) throw new Error('Neural Core connection failed');
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let fullText = "";
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                
+                fullText += decoder.decode(value);
+                content.innerHTML = marked.parse(fullText);
+                status.innerText = 'Synthesizing...';
+            }
             
-            // Industrial Markdown Rendering
-            content.innerHTML = marked.parse(data.synthesis);
-            content.classList.remove('italic', 'opacity-80');
-            content.classList.add('prose', 'prose-sm', 'dark:prose-invert', 'max-w-none', 'theme-text');
             status.innerText = 'Analysis Complete';
         } catch (e) {
             console.error('Synthesis Error:', e);
-            content.innerText = 'Neural synthesis temporarily unavailable.';
+            content.innerText = 'Neural core synchronization interrupted: ' + e.message;
             status.innerText = 'Analysis Failed';
         }
     });
