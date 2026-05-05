@@ -36,12 +36,13 @@ async def global_exception_handler(request: Request, exc: Exception):
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Module Registration (APIRouter)
-from api.routers import home, search, topics, modeling, maintenance
+from api.routers import home, search, topics, modeling, maintenance, crud
 app.include_router(home.router)
 app.include_router(search.router)
 app.include_router(topics.router)
 app.include_router(modeling.router)
 app.include_router(maintenance.router)
+app.include_router(crud.router)
 
 from db.operations.AsyncDocumentManager import AsyncDocumentManager
 

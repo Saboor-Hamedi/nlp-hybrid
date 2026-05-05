@@ -78,158 +78,85 @@ DELETE FROM document WHERE content ~ '×[\s\d\.]+';
 DELETE FROM document WHERE content ~ '(\d+\.\d+\s+){5,}';
 
 -- ============================================
--- PART 5: COMPREHENSIVE TEXT CLEANUP FUNCTION
+-- PART 5: MODULAR FORENSIC CLEANING PIPELINE
 -- ============================================
 
-CREATE OR REPLACE FUNCTION clean_garbage_from_text(input_text TEXT)
+-- MODULE A: ACADEMIC FILTER
+CREATE OR REPLACE FUNCTION forensic_clean_academic(input_text TEXT)
 RETURNS TEXT AS $$
-DECLARE
-    result TEXT := input_text;
 BEGIN
-    IF input_text IS NULL THEN
-        RETURN NULL;
-    END IF;
-    
-    -- ============================================
-    -- SAFE OPERATIONS (Replace with spaces, not empty strings)
-    -- ============================================
-    
-    -- Structure & Symbol Artifacts (REPLACE WITH SPACE, NOT EMPTY)
-    result := REGEXP_REPLACE(result, '^[\#\*\-\•]+\s*', '', 'g');
-    result := REGEXP_REPLACE(result, '\(cid:\d+\)', ' ', 'g');
-    result := REGEXP_REPLACE(result, '\[\]', ' ', 'g');
-    result := REGEXP_REPLACE(result, '\[\d+\]', ' ', 'g');
-    result := REGEXP_REPLACE(result, '[⊗¡\*∗†‡§¶‖]', ' ', 'g'); -- Math/special symbols & Author marks
-    
-    -- Messy Symbols (Replace with space)
-    result := REGEXP_REPLACE(result, '[%±τ_—]', ' ', 'g');
-    result := REGEXP_REPLACE(result, '\s+-\s+', ' ', 'g');
-    
-    -- PDF Specific Artifacts
-    -- Fix hyphenated line breaks (comput- ation -> computation) - SAFE
-    result := REGEXP_REPLACE(result, '([a-zA-Z]+)-\s+([a-zA-Z]+)', '\1\2', 'g');
-    -- Remove emails and URLs (replace with space)
-    result := REGEXP_REPLACE(result, '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', ' ', 'g');
-    result := REGEXP_REPLACE(result, 'https?:\/\/[^\s]+', ' ', 'g');
-    result := REGEXP_REPLACE(result, '\y(page\s*\d+\s*(of\s*\d+)?)\y', ' ', 'gi');
-    result := REGEXP_REPLACE(result, '\y(fig\.|figure|table)\s+\d+[a-zA-Z]?\y', ' ', 'gi');
-    
-    -- Ligatures (Safe replacement)
+    RETURN REGEXP_REPLACE(input_text, 
+        'i\.\s*i\.\s*d\.|i\.\s*e\.\s*,?|qper⊗l?|dkl|standard errors in parentheses|p¡\.?\*{1,3}|\(\w+\s+et\s+al\.,\s+\d{4}\)|\(\w+\s+and\s+\w+,\s+\d{4}\)|\s+et\s+al\.|arxiv:[^,\.\s]+|biometrika[^,\.\s]+|doi:[^,\.\s]+|\(\d+\):–,\d+|\(\d+\):–,|\(\d+\):,|doi:\s*\.\./\.\.|isbn\s+\.|h\s+t\s+t\s+p\s*s?\s*:\s*/\s*/\s*d\s*o\s*i\s*\.\s*o\s*r\s*g', 
+        ' ', 'gi');
+END;
+$$ LANGUAGE plpgsql;
+
+-- MODULE B: PDF & OCR ARTIFACT REPAIR
+CREATE OR REPLACE FUNCTION forensic_clean_artifacts(input_text TEXT)
+RETURNS TEXT AS $$
+DECLARE result TEXT := input_text;
+BEGIN
+    result := REGEXP_REPLACE(result, '\(cid:\d+\)|\[\]|\[\d+\]|[⊗¡\*∗†‡§¶‖]|[%±τ_—]|\s+-\s+|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|https?:\/\/[^\s]+|\y(page\s*\d+\s*(of\s*\d+)?)\y|\y(fig\.|figure|table)\s+\d+[a-zA-Z]?\y', ' ', 'gi');
+    result := REGEXP_REPLACE(result, '([a-zA-Z]+)-\s+([a-zA-Z]+)', '\1\2', 'g'); -- Fix hyphenated line breaks
     result := REGEXP_REPLACE(result, 'ﬁ', 'fi', 'g');
     result := REGEXP_REPLACE(result, 'ﬂ', 'fl', 'g');
     result := REGEXP_REPLACE(result, 'ﬀ', 'ff', 'g');
     result := REGEXP_REPLACE(result, 'ﬃ', 'ffi', 'g');
     result := REGEXP_REPLACE(result, 'ﬄ', 'ffl', 'g');
     result := REGEXP_REPLACE(result, '[\u200B\u200C\u200D\uFEFF]', '', 'g');
+    RETURN result;
+END;
+$$ LANGUAGE plpgsql;
+
+-- MODULE C: MATH & SYMBOL PURGE
+CREATE OR REPLACE FUNCTION forensic_clean_math(input_text TEXT)
+RETURNS TEXT AS $$
+DECLARE result TEXT := input_text;
+BEGIN
     result := REGEXP_REPLACE(result, '[=+\/<>≤≥∈∑∫≈∞≠−⃗αβγδεζηθικλμνξοπρστυφχψωΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ]', ' ', 'g');
-    result := REGEXP_REPLACE(result, '[“”‘’`]', ' ', 'g');
+    result := REGEXP_REPLACE(result, '\s+[bcdefghijklmnopqrstuvwxyz]\s+', ' ', 'gi'); -- Single letters (indices)
+    result := REGEXP_REPLACE(result, '\y(wt|ct|bt|xt|yt|zt|mt|nt|st|pt|xk|yk|zk|mk|nk|ij|ji)\y', ' ', 'gi'); -- Math vars
+    result := REGEXP_REPLACE(result, '[a-zA-Z]\([^)]*\)', ' ', 'g'); -- Functional notation f(x)
+    RETURN result;
+END;
+$$ LANGUAGE plpgsql;
+
+-- MODULE D: NUMERICAL FILTER
+CREATE OR REPLACE FUNCTION forensic_clean_numerical(input_text TEXT)
+RETURNS TEXT AS $$
+DECLARE result TEXT := input_text;
+BEGIN
+    result := REGEXP_REPLACE(result, '\s+\d+(?:\.\d+)?\s+', ' ', 'g'); -- Standalone numbers
+    result := REGEXP_REPLACE(result, '\m\d+|\d+\M', '', 'g'); -- Numbers attached to words
+    RETURN result;
+END;
+$$ LANGUAGE plpgsql;
+
+-- MASTER ORCHESTRATOR: THE NEURAL CLEANER
+CREATE OR REPLACE FUNCTION clean_garbage_modular(
+    input_text TEXT,
+    do_academic BOOLEAN DEFAULT TRUE,
+    do_artifacts BOOLEAN DEFAULT TRUE,
+    do_math BOOLEAN DEFAULT TRUE,
+    do_num BOOLEAN DEFAULT TRUE
+)
+RETURNS TEXT AS $$
+DECLARE
+    result TEXT := input_text;
+BEGIN
+    IF input_text IS NULL THEN RETURN NULL; END IF;
     
-    -- Academic Citations (Replace with space)
-    result := REGEXP_REPLACE(result, 'i\.\s*i\.\s*d\.', ' ', 'gi');
-    result := REGEXP_REPLACE(result, 'i\.\s*e\.\s*,?', ' ', 'gi');
-    result := REGEXP_REPLACE(result, 'qper⊗l?|dkl', ' ', 'gi');
-    result := REGEXP_REPLACE(result, 'standard errors in parentheses|p¡\.?\*{1,3}', ' ', 'gi');
-    result := REGEXP_REPLACE(result, '\(\w+\s+et\s+al\.,\s+\d{4}\)|\(\w+\s+and\s+\w+,\s+\d{4}\)', ' ', 'gi');
-    result := REGEXP_REPLACE(result, '\s+et\s+al\.', ' ', 'gi');
-    result := REGEXP_REPLACE(result, 'arxiv:[^,\.\s]+|biometrika[^,\.\s]+|doi:[^,\.\s]+', ' ', 'gi');
-    result := REGEXP_REPLACE(result, '\(\d+\):–,\d+|\(\d+\):–,|\(\d+\):,', ' ', 'gi');
-    result := REGEXP_REPLACE(result, 'doi:\s*\.\./\.\.|isbn\s+\.', ' ', 'gi');
+    -- Sequential Processing based on Toggles
+    IF do_artifacts THEN result := forensic_clean_artifacts(result); END IF;
+    IF do_academic  THEN result := forensic_clean_academic(result); END IF;
+    IF do_math      THEN result := forensic_clean_math(result); END IF;
+    IF do_num       THEN result := forensic_clean_numerical(result); END IF;
     
-    -- ============================================
-    -- NUMBER CLEANUP (REPLACE WITH SPACE)
-    -- ============================================
-    
-    -- Remove standalone numbers (replace with space)
-    result := REGEXP_REPLACE(result, '\s+\d+(?:\.\d+)?\s+', ' ', 'g');
-    result := REGEXP_REPLACE(result, '^\d+(?:\.\d+)?\s+', '', 'g');
-    result := REGEXP_REPLACE(result, '\s+\d+(?:\.\d+)?$', '', 'g');
-    
-    -- Remove numbers attached to words (1department -> department)
-    -- BUT preserve the word by removing only the numbers
-    result := REGEXP_REPLACE(result, '\m\d+', '', 'g');
-    result := REGEXP_REPLACE(result, '\d+\M', '', 'g');
-    
-    -- ============================================
-    -- SINGLE LETTER & MATH VARIABLE CLEANUP
-    -- ============================================
-    
-    -- Remove single letters (Keep ONLY 'a' as a valid word, delete 'i' because in academic papers 'i' is an index)
-    result := REGEXP_REPLACE(result, '\s+[bcdefghijklmnopqrstuvwxyz]\s+', ' ', 'gi');
-    result := REGEXP_REPLACE(result, '^[bcdefghijklmnopqrstuvwxyz]\s+', '', 'gi');
-    result := REGEXP_REPLACE(result, '\s+[bcdefghijklmnopqrstuvwxyz]$', '', 'gi');
-    
-    -- Remove isolated 2-letter math variables left over from subscripts (wt, ct, bt, xt, yt, zt, mt, nt, st, xk, mk, etc.)
-    result := REGEXP_REPLACE(result, '\y(wt|ct|bt|xt|yt|zt|mt|nt|st|pt|xk|yk|zk|mk|nk|ij|ji)\y', ' ', 'gi');
-    
-    -- Remove single letters with periods (c., A.)
-    result := REGEXP_REPLACE(result, '\y[a-zA-Z]\.\s*', ' ', 'gi');
-    
-    -- Remove letter with parentheses y(n)
-    result := REGEXP_REPLACE(result, '[a-zA-Z]\([^)]*\)', ' ', 'g');
-    
-    -- ============================================
-    -- REPEATED WORDS (Keep one instance)
-    -- ============================================
-    
-    -- Remove repeated words 3+ times (word word word -> word)
-    result := REGEXP_REPLACE(result, '\y(\w+)\y(\s+\1\y){2,}', '\1', 'gi');
-    -- Remove repeated words 2+ times (word word -> word)
-    result := REGEXP_REPLACE(result, '\y(\w+)\y\s+\1\y', '\1', 'gi');
-    
-    -- ============================================
-    -- PUNCTUATION & FORMATTING (Replace with space)
-    -- ============================================
-    
-    -- Remove control characters (replace with space)
-    result := REGEXP_REPLACE(result, '[\x00-\x1F\x7F]', ' ', 'g');
-    
-    -- Remove diacritics
-    result := REGEXP_REPLACE(result, '[́ˆ`´¨]', '', 'g');
-    
-    -- Fix hyphenated words (learn-ing -> learning) - SAFE (only when hyphenated)
-    result := REGEXP_REPLACE(result, '(\w+)-(\w+)', '\1\2', 'g');
-    
-    -- Remove multiple punctuation (replace with space)
-    result := REGEXP_REPLACE(result, '\.{2,}|,{2,}', ' ', 'g');
-    
-    -- Remove leading punctuation
-    result := REGEXP_REPLACE(result, '^\s*[\.\:\;\,\-\_]+', '', 'g');
-    
-    -- Fix space before punctuation (hello . world -> hello. world)
-    result := REGEXP_REPLACE(result, '\s+([.,;:!?])', '\1', 'g');
-    
-    -- ============================================
-    -- SPECIAL PATTERNS
-    -- ============================================
-    
-    -- Remove abbreviation patterns (-ht1b (iaq))
-    result := REGEXP_REPLACE(result, '\s*[-]?[a-z0-9]+\s*\([a-z]+\)', ' ', 'gi');
-    
-    -- Remove standalone parentheses with letters
-    result := REGEXP_REPLACE(result, '\(\s*[a-z]+\s*\)', ' ', 'gi');
-    
-    -- Fix spaced DOIs
-    result := REGEXP_REPLACE(result, 'h\s+t\s+t\s+p\s*s?\s*:\s*/\s*/\s*d\s*o\s*i\s*\.\s*o\s*r\s*g', 'https://doi.org', 'gi');
-    
-    -- ============================================
-    -- FINAL AGGRESSIVE PUNCTUATION REMOVAL
-    -- Removes: . – , " / ? ( ) # { } [ ] :
-    -- ============================================
-    result := REGEXP_REPLACE(result, '[\.\–\,\"\/\\\?\(\)\#\{\}\[\]\:]', ' ', 'g');
-    
-    -- ============================================
-    -- FINAL: COLLAPSE MULTIPLE SPACES TO SINGLE SPACE
-    -- This is SAFE - keeps word boundaries intact
-    -- ============================================
-    
-    -- Collapse multiple spaces to single space (PRESERVES word separation)
-    result := TRIM(REGEXP_REPLACE(result, '\s+', ' ', 'g'));
-    
-    -- Remove spaces before punctuation (safety)
-    result := REGEXP_REPLACE(result, '\s+([.,;:!?])', '\1', 'g');
-    
-    -- Final trim
-    result := TRIM(result);
+    -- Final Normalization (Always runs)
+    result := REGEXP_REPLACE(result, '\y(\w+)\y(\s+\1\y){2,}', '\1', 'gi'); -- Repeated words
+    result := REGEXP_REPLACE(result, '[\x00-\x1F\x7F]', ' ', 'g'); -- Control chars
+    result := REGEXP_REPLACE(result, '[\.\–\,\"\/\\\?\(\)\#\{\}\[\]\:]', ' ', 'g'); -- Punctuation
+    result := TRIM(REGEXP_REPLACE(result, '\s+', ' ', 'g')); -- Collapse whitespace
     
     RETURN result;
 END;
@@ -282,9 +209,9 @@ VACUUM ANALYZE document_embedding;
 
 -- Replace 
 UPDATE document 
-SET content = REGEXP_REPLACE(content, 'ragstyle',
-'rag style', 'g')
-WHERE content ~ 'ragstyle';
+SET content = REGEXP_REPLACE(content, 'featurelearning',
+'feature learning', 'g')
+WHERE content ~ 'featurelearning';
 SELECT * FROM document order by RANDOM() LIMIT 100;
 -- swuggy invocab and outofvoca
 

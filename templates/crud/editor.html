@@ -1,0 +1,52 @@
+<!-- Industrial Forensic Editor -->
+<div id="editorModal" class="fixed inset-0 z-[100] bg-gray-900/30 backdrop-blur-md items-center justify-center p-6 hidden">
+    <div class="bg-white theme-bg w-full max-w-xl rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] border theme-border overflow-hidden flex flex-col editor-kinetic">
+        
+        <!-- Precision Title Bar -->
+        <header class="h-10 pl-5 pr-1 border-b theme-border flex items-center justify-between bg-gray-50/5 rounded-t-xl shrink-0">
+            <div class="flex items-center gap-2.5">
+                <div class="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></div>
+                <h2 id="editorTitle" class="text-[9px] font-bold theme-text uppercase tracking-[0.2em] opacity-60">Forensic Refinement</h2>
+            </div>
+            <button onclick="toggleEditor()" class="h-10 w-10 flex items-center justify-center theme-text-sec hover:bg-red-500 hover:text-white active:scale-90 transition-all duration-200">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </header>
+
+        <!-- Editor Body -->
+        <div class="p-6">
+            <textarea id="editorContent" 
+                class="w-full h-80 theme-bg-sec theme-text p-5 rounded-lg border theme-border focus:border-blue-500/30 focus:ring-4 focus:ring-blue-500/5 outline-none text-[13px] leading-relaxed font-light resize-none custom-scrollbar transition-all duration-300 placeholder:opacity-20"
+                placeholder="Awaiting input..."></textarea>
+        </div>
+
+        <!-- Footer Actions -->
+        <footer class="px-6 pb-6 flex items-center justify-end gap-3">
+            <button onclick="toggleEditor()" 
+                    class="px-5 py-2.5 text-[10px] font-bold theme-text-sec uppercase tracking-widest hover:theme-text active:scale-95 transition-all">
+                Cancel
+            </button>
+            <button onclick="saveDocument()" 
+                    class="px-8 py-2.5 bg-blue-600 text-white rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-blue-700 active:scale-95 transition-all duration-200">
+                Update
+            </button>
+        </footer>
+    </div>
+</div>
+
+<style>
+    .editor-kinetic {
+        animation: editorSlide 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    @keyframes editorSlide {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 3px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(37, 99, 235, 0.15);
+        border-radius: 10px;
+    }
+</style>

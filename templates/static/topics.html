@@ -127,20 +127,33 @@
                     <th class="px-6 py-4">Forensic Segment</th>
                     <th class="px-6 py-4">LDA Signature</th>
                     <th class="px-6 py-4">BERT Signature</th>
+                    <th class="px-6 py-4 text-right">Actions</th>
                 </tr>
             </thead>
             <tbody class="divide-y theme-border">
                 {% for doc in documents %}
-                <tr class="theme-hover transition-colors">
-                    <td class="px-6 py-6 min-w-[300px]">
-                        <p class="text-[11px] theme-text font-medium mb-1 line-clamp-2">{{ doc.content }}</p>
-                        <p class="text-[9px] theme-text-sec italic font-mono line-clamp-1 opacity-50">{{ doc.tokens }}</p>
+                <tr class="theme-hover transition-colors group">
+                    <td class="px-6 py-2.5 min-w-[300px]">
+                        <p id="doc-content-{{ doc.id }}" class="text-[11px] theme-text font-medium mb-0.5 line-clamp-1">{{ doc.content }}</p>
+                        <p class="text-[8px] theme-text-sec italic font-mono line-clamp-1 opacity-40">{{ doc.tokens }}</p>
                     </td>
-                    <td class="px-6 py-6">
-                        <span class="inline-flex px-2 py-0.5 rounded text-[9px] bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-300 font-bold border border-purple-100 dark:border-purple-500/20">{{ doc.lda_tag }}</span>
+                    <td class="px-6 py-2.5">
+                        <span class="inline-flex px-1.5 py-0.5 rounded text-[8px] bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-300 font-bold border border-purple-100 dark:border-purple-500/20">{{ doc.lda_tag }}</span>
                     </td>
-                    <td class="px-6 py-6">
-                        <span class="inline-flex px-2 py-0.5 rounded text-[9px] bg-indigo-500/10 text-indigo-400 font-bold border border-indigo-500/20">{{ doc.bert_tag }}</span>
+                    <td class="px-6 py-2.5">
+                        <span class="inline-flex px-1.5 py-0.5 rounded text-[8px] bg-indigo-500/10 text-indigo-400 font-bold border border-indigo-500/20">{{ doc.bert_tag }}</span>
+                    </td>
+                    <td class="px-6 py-2.5 text-right whitespace-nowrap">
+                        <div class="flex items-center justify-end gap-1">
+                            <button onclick="openEditor({{ doc.id }}, document.getElementById('doc-content-{{ doc.id }}').innerText)" 
+                                    class="p-1.5 theme-text-sec opacity-20 group-hover:opacity-100 hover:text-blue-600 active:scale-90 transition-all" title="Edit Correlation">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                            </button>
+                            <button onclick="deleteDocument({{ doc.id }})" 
+                                    class="p-1.5 theme-text-sec opacity-0 group-hover:opacity-100 hover:text-red-500 active:scale-90 transition-all" title="Purge Record">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </button>
+                        </div>
                     </td>
                 </tr>
                 {% endfor %}
