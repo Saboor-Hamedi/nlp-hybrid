@@ -1,6 +1,6 @@
 import re
 
-def parse_lda_keywords(topic_string, top_k=5, min_weight=0.01):
+def parse_lda_keywords(topic_string, top_k=10, min_weight=0.005):
     keywords = {}
     pattern = r'([\d.]+)\*"([^"]+)"'
     for weight, word in re.findall(pattern, topic_string):
@@ -9,7 +9,7 @@ def parse_lda_keywords(topic_string, top_k=5, min_weight=0.01):
             keywords[word] = weight_float
     return dict(sorted(keywords.items(), key=lambda x: x[1], reverse=True)[:top_k])
 
-def parse_bert_keywords(bert_topic_tuple, top_k=5):
+def parse_bert_keywords(bert_topic_tuple, top_k=10):
     try:
         if isinstance(bert_topic_tuple, (tuple, list)) and len(bert_topic_tuple) > 1:
             keywords_str = bert_topic_tuple[1]

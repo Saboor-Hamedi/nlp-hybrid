@@ -32,19 +32,24 @@
                 <tbody class="divide-y theme-border">
                     {% for id, words in lda_topics %}
                     <tr class="hover:bg-gray-50/5 transition-colors">
-                        <td class="px-4 py-3 w-32">
-                            <div class="flex flex-col">
-                                <span class="text-[9px] font-bold theme-text-sec uppercase tracking-widest">#{{ id + 1 }}</span>
-                                <span class="text-[8px] font-bold text-purple-500 opacity-60">CS: {{ "%.2f"|format(lda_coherence[id]) if lda_coherence and id in lda_coherence else "N/A" }}</span>
+                        <td class="px-4 py-4 w-40 border-r theme-border bg-purple-500/5">
+                            <div class="flex flex-col gap-1">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[10px] font-bold theme-text uppercase tracking-widest">Theme #{{ id + 1 }}</span>
+                                    <span class="text-[8px] font-bold text-purple-500 bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/20">
+                                        {{ "%.2f"|format(lda_coherence[id]) if lda_coherence and id in lda_coherence else "0.00" }}
+                                    </span>
+                                </div>
+                                <span class="text-[7px] font-bold theme-text-sec opacity-40 uppercase tracking-tighter">Forensic Coherence</span>
                             </div>
                         </td>
                         <td class="px-4 py-3">
                             <div class="flex flex-wrap gap-1">
                                 {% for segment in words.split(' + ') %}
                                 {% set parts = segment.split('*') %}
-                                <span class="text-[8px] bg-purple-500/10 text-purple-600 dark:text-purple-300 px-1.5 py-0.5 rounded border border-purple-500/10">
-                                    {{ parts[1]|replace('"', '') }} 
-                                    <span class="opacity-50 ml-0.5">{{ parts[0] }}</span>
+                                <span class="text-[8px] bg-purple-500/10 text-purple-600 dark:text-purple-300 px-1.5 py-0.5 rounded border border-purple-500/10 font-medium">
+                                    {{ parts[1]|replace('"', '') if parts|length > 1 else parts[0] }} 
+                                    <span class="text-purple-400/80 ml-1 font-bold">({{ parts[0] if parts|length > 1 else "" }})</span>
                                 </span>
                                 {% endfor %}
                             </div>

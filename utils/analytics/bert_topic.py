@@ -31,7 +31,7 @@ def get_bert_topics(documents, embedder, num_topics=10):
         for doc in cluster_docs:
             all_words.extend(preprocess(doc))
         
-        most_common = Counter(all_words).most_common(5)
+        most_common = Counter(all_words).most_common(10)
         keywords = ", ".join([word for word, count in most_common])
         topic_summaries.append((i, keywords))
         
