@@ -196,3 +196,43 @@ async def search(
         "bert_topics": bert_topics,
         "lda_coherence": lda_coherence
     })
+
+@router.get("/api/search")
+async def api_search(
+    query: str = Query(..., min_length=2),
+    conn = Depends(get_async_db),
+    model = Depends(get_nlp_model)
+):
+    """
+    Pure JSON Retrieval: Optimized for the RAG Chat Engine.
+    """
+    results, _ = await search_hybrid_async(query, conn, model)
+    
+    # Quick thematic discovery
+    training_data = [r[1] for r in results]
+    dynamic_k = max(1, min(5, len(training_data)))
+    formatted = []
+    
+    if training_data:
+        try:
+            lda_topics, lda_model, dictionary = await anyio.to_thread.run_sync(
+                get_topics, training_data, dynamic_k
+            )
+            bert_topics, bert_kmeans = await anyio.to_thread.run_sync(
+                get_bert_topics, training_data, model, dynamic_k
+            )
+            
+            for r in results:
+                lda_id = await anyio.to_thread.run_sync(predict_topic, r[1], lda_model, dictionary)
+                bert_id = await anyio.to_thread.run_sync(predict_bert_topic, r[1], model, bert_kmeans)
+                
+                formatted.append({
+                    "id": r[0], "content": r[1], "score": r[2],
+                    "tag": f"LDA-{lda_id+1} | BERT-{bert_id+1}",
+                    "created_at": r[4]
+                })
+        except:
+            for r in results:
+                formatted.append({"id": r[0], "content": r[1], "score": r[2], "tag": "Unprocessed", "created_at": r[4]})
+    
+    return {"results": formatted}

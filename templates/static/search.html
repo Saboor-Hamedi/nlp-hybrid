@@ -91,14 +91,73 @@
             </table>
         </div>
     </div>
-</div>
+    <!-- Neural Synthesis Panel -->
+    <div id="synthesis-panel" class="hidden mb-12 animate-in fade-in slide-in-from-top-4 duration-700">
+        <div class="bg-blue-600/5 border border-blue-500/10 rounded-2xl overflow-hidden shadow-sm">
+            <div class="px-6 py-3 border-b border-blue-500/10 flex items-center justify-between bg-blue-600/5">
+                <div class="flex items-center gap-3">
+                    <div class="w-2 h-2 bg-blue-600 rounded-full animate-pulse shadow-[0_0_8px_rgba(37,99,235,0.4)]"></div>
+                    <h3 class="text-[9px] font-bold theme-text uppercase tracking-[0.2em] opacity-60">Neural Synthesis Briefing</h3>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span id="synthesis-status" class="text-[8px] font-bold text-blue-600 uppercase tracking-widest opacity-60 italic">Synchronizing context...</span>
+                </div>
+            </div>
+            <div class="p-8">
+                <div id="synthesis-content" class="theme-text text-[13px] leading-relaxed font-light whitespace-pre-wrap opacity-80">
+                    <!-- Synthesized content flows here -->
+                </div>
+            </div>
+            <div class="px-6 py-2 bg-blue-600/5 border-t border-blue-500/10 flex items-center justify-between">
+                <span class="text-[8px] font-bold theme-text-sec opacity-40 uppercase tracking-widest">Model: DeepSeek-Chat / High-Fidelity Mode</span>
+                <span class="text-[8px] font-bold text-blue-600/60 uppercase tracking-widest">Grounding Active</span>
+            </div>
+        </div>
+    </div>
 
-<div class="mb-4 px-2 border-b theme-border pb-2">
+    <!-- Search Metadata -->
+    <div class="mb-12 border-l-2 theme-border pl-6">
     <h2 class="text-[10px] font-bold theme-text-sec uppercase tracking-widest opacity-40">Document Correlation Stream</h2>
+</div>
 </div>
 
 {% block scripts %}
 <script src="/static/crud.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        const panel = document.getElementById('synthesis-panel');
+        const content = document.getElementById('synthesis-content');
+        const status = document.getElementById('synthesis-status');
+        
+        try {
+            panel.classList.remove('hidden');
+            
+            // Gather result context for RAG
+            const resultsContext = [];
+            {% for result in results %}
+            resultsContext.push({
+                id: {{ result.id }},
+                content: `{{ result.content|replace('"', '\"')|replace('\n', ' ') }}`
+            });
+            {% endfor %}
+
+            const response = await fetch('/api/synthesis', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ 
+                    query: "{{ query }}", 
+                    context_docs: resultsContext 
+                })
+            });
+            const data = await response.json();
+            content.innerText = data.synthesis;
+            status.innerText = 'Synthesis Complete';
+        } catch (e) {
+            console.error('Synthesis Error:', e);
+            status.innerText = 'Synthesis Failed';
+        }
+    });
+</script>
 {% endblock %}
 
 <div class="space-y-4">
@@ -120,18 +179,18 @@
                 </p>
 
                 <!-- Forensic Action Row -->
-                <div class="flex items-center gap-4 mb-6">
-                    <a href="/show/{{ result.id }}?lda={{ result.lda_topic_label|urlencode }}&bert={{ result.bert_topic_label|urlencode }}&lda_kw={{ result.lda_keywords.items()|map('join', ':')|join(',')|urlencode }}&bert_kw={{ result.bert_keywords|join(',')|urlencode }}" 
-                       class="text-[10px] font-bold text-blue-600 uppercase tracking-widest hover:text-blue-800 transition-all border-b border-blue-200">
+                <div class="flex items-center gap-2 pt-4 mt-auto border-t theme-border">
+                    <a href="/show/{{ result.id }}" 
+                            class="w-fit px-4 py-1.5 bg-blue-600/10 text-blue-600 rounded-lg text-[9px] font-bold uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all text-center">
                         Details
                     </a>
                     <button onclick="openEditor({{ result.id }}, document.getElementById('doc-content-{{ result.id }}').innerText)" 
-                            class="p-1 theme-text-sec opacity-30 hover:opacity-100 hover:text-blue-600 transition-all" title="Edit Correlation">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                            class="p-1.5 theme-text-sec opacity-40 hover:opacity-100 hover:text-blue-600 transition-all" title="Refine">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                     </button>
                     <button onclick="deleteDocument({{ result.id }})" 
-                            class="p-1 theme-text-sec opacity-30 hover:opacity-100 hover:text-red-500 transition-all" title="Purge Record">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            class="p-1.5 theme-text-sec opacity-40 hover:opacity-100 hover:text-red-500 transition-all" title="Purge">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                     </button>
                 </div>
 

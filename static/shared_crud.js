@@ -1,59 +1,94 @@
 /**
- * Shared Forensic CRUD Utilities
+ * Shared CRUD Orchestration
+ * Unified lifecycle management for forensic document actions.
  */
+
 window.currentDocId = null;
 
-window.toggleEditor = function() {
-    const modal = document.getElementById('editorModal');
-    if (!modal) return;
-    const isHidden = modal.classList.contains('hidden');
-    if (isHidden) {
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-    } else {
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
+// Global dispatcher for forensic actions
+window.openViewer = async function(id) {
+    try {
+        const response = await fetch(`/api/docs/${id}`);
+        if (!response.ok) throw new Error('Forensic retrieval failed');
+        const data = await response.json();
+
+        // Populate Viewer Modal
+        document.getElementById('viewerTitle').innerText = `Document Inspection: #${id}`;
+        document.getElementById('viewerBody').innerText = data.content;
+        
+        // Handle Thematic Labels
+        const ldaLabel = document.getElementById('viewerLdaLabel');
+        const bertLabel = document.getElementById('viewerBertLabel');
+        
+        ldaLabel.innerText = data.lda_topic_label || 'N/A';
+        bertLabel.innerText = data.bert_topic_label || 'N/A';
+
+        // Handle Keywords
+        const ldaList = document.getElementById('viewerLdaKeywords');
+        const bertList = document.getElementById('viewerBertKeywords');
+        
+        ldaList.innerHTML = (data.lda_keywords || []).map(kw => 
+            `<span class="px-2 py-0.5 rounded theme-bg-sec theme-text-sec text-[10px] border theme-border">${kw}</span>`
+        ).join('');
+        
+        bertList.innerHTML = (data.bert_keywords || []).map(kw => 
+            `<span class="px-2 py-0.5 rounded theme-bg-sec theme-text-sec text-[10px] border theme-border">${kw}</span>`
+        ).join('');
+
+        toggleViewer();
+
+        // Trigger Neural Insight (RAG) for the current document
+        const insightContent = document.getElementById('viewerInsightContent');
+        const insightStatus = document.getElementById('viewerInsightStatus');
+        
+        insightContent.innerText = "Analyzing forensic signatures...";
+        insightStatus.innerText = "Processing...";
+
+        try {
+            const synthResponse = await fetch('/api/synthesis', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ 
+                    query: "Analyze the significance and primary themes of this forensic record.", 
+                    context_docs: [data] 
+                })
+            });
+            const synthData = await synthResponse.json();
+            insightContent.innerText = synthData.synthesis;
+            insightStatus.innerText = "Analysis Complete";
+        } catch (error) {
+            insightContent.innerText = "Neural synthesis temporarily unavailable.";
+            insightStatus.innerText = "Analysis Suspended";
+        }
+    } catch (error) {
+        showToast(error.message, 'error');
     }
 };
 
-window.showToast = function(message, type = 'success') {
-    const toast = document.createElement('div');
-    toast.className = `fixed bottom-6 right-6 px-6 py-3 rounded-xl shadow-2xl z-[9999] transform translate-y-20 opacity-0 transition-all duration-300 font-bold text-[11px] uppercase tracking-widest border ${
-        type === 'success' ? 'bg-green-500 text-white border-green-600' : 'bg-red-500 text-white border-red-600'
-    }`;
-    toast.innerHTML = message;
-    document.body.appendChild(toast);
-    requestAnimationFrame(() => {
-        toast.style.transform = 'translateY(0)';
-        toast.style.opacity = '1';
-    });
-    setTimeout(() => {
-        toast.style.transform = 'translateY(20px)';
-        toast.style.opacity = '0';
-        setTimeout(() => toast.remove(), 300);
-    }, 4000);
-};
+// Surgical Neural Refinement
+window.refineWithAI = async function(id) {
+    const contentElement = document.getElementById(`doc-content-${id}`);
+    if (!contentElement) return;
 
-window.deleteDocument = async function(docId) {
-    if (!confirm(`Are you sure you want to permanently purge Document #${docId}?`)) return;
-    const card = document.querySelector(`[data-doc-id="${docId}"]`);
-    if (card) card.style.opacity = '0.5';
+    const rawText = contentElement.innerText;
+    showToast('Neural Engine: Initiating deep-clean...', 'info');
 
     try {
-        const response = await fetch(`/api/docs/${docId}`, { method: 'DELETE' });
-        if (response.ok) {
-            if (card) {
-                card.style.transition = 'all 0.5s ease-out';
-                card.style.transform = 'translateX(50px)';
-                card.style.opacity = '0';
-                setTimeout(() => card.remove(), 500);
-            }
-            showToast(`Document #${docId} purged.`, 'success');
-        } else {
-            throw new Error('Purge failed');
-        }
+        const response = await fetch('/api/refine', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ text: rawText })
+        });
+        
+        if (!response.ok) throw new Error('Neural refinement failed');
+        
+        const data = await response.json();
+        const refinedText = data.refined_text;
+        
+        // Open Editor with refined content
+        openEditor(id, refinedText);
+        showToast('Neural Refinement Complete: Ready for commit.', 'success');
     } catch (error) {
-        if (card) card.style.opacity = '1';
         showToast(error.message, 'error');
     }
 };
@@ -64,5 +99,34 @@ window.saveDocument = function() {
         if (window.performUpdate) window.performUpdate(window.currentDocId);
     } else {
         if (window.performInsert) window.performInsert();
+    }
+};
+
+window.deleteDocument = async function(id) {
+    if (!confirm('Are you sure you want to purge this record from the archive?')) return;
+    
+    try {
+        const response = await fetch(`/api/docs/${id}`, { method: 'DELETE' });
+        if (!response.ok) throw new Error('Forensic purge failed');
+        
+        showToast('Record purged successfully', 'success');
+        // Reload or remove from DOM
+        window.location.reload();
+    } catch (error) {
+        showToast(error.message, 'error');
+    }
+};
+
+function toggleViewer() {
+    const modal = document.getElementById('viewer-modal');
+    modal.classList.toggle('hidden');
+    modal.classList.toggle('flex');
+}
+
+window.showToast = function(message, type = 'info') {
+    if (window.triggerNotification) {
+        window.triggerNotification(message, type);
+    } else {
+        alert(message);
     }
 };
