@@ -60,6 +60,13 @@
         });
     }
 
+    // Close on Escape key
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && settingsModal && !settingsModal.classList.contains('hidden')) {
+            toggleSettings();
+        }
+    });
+
     window.saveSettings = function() {
         // Simulate save
         const btn = document.querySelector('button[onclick="saveSettings()"]');
