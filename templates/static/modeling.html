@@ -1,0 +1,93 @@
+{% extends 'static/base.html' %}
+{% block title %} Sentiment Modeling - Hybrid Search Engine {% endblock %}
+{% include 'static/header.html'%}
+{% block content %}
+<div class="max-w-6xl mx-auto bg-white shadow-xl rounded-lg p-8">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Sentiment Modeling Dashboard</h1>
+
+    <!-- Sentiment Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        <div class="bg-emerald-50 p-6 rounded-xl border border-emerald-100 text-center">
+            <h3 class="text-emerald-700 font-bold uppercase text-xs tracking-wider mb-2">Positive</h3>
+            <p class="text-4xl font-black text-emerald-600">{{ sentiment.positive }}</p>
+            <p class="text-xs text-emerald-500 mt-1">Documents</p>
+        </div>
+        <div class="bg-gray-50 p-6 rounded-xl border border-gray-100 text-center">
+            <h3 class="text-gray-700 font-bold uppercase text-xs tracking-wider mb-2">Neutral</h3>
+            <p class="text-4xl font-black text-gray-600">{{ sentiment.neutral }}</p>
+            <p class="text-xs text-gray-500 mt-1">Documents</p>
+        </div>
+        <div class="bg-rose-50 p-6 rounded-xl border border-rose-100 text-center">
+            <h3 class="text-rose-700 font-bold uppercase text-xs tracking-wider mb-2">Negative</h3>
+            <p class="text-4xl font-black text-rose-600">{{ sentiment.negative }}</p>
+            <p class="text-xs text-rose-500 mt-1">Documents</p>
+        </div>
+    </div>
+
+    <!-- Distribution Bar -->
+    <div class="mb-12">
+        <h2 class="text-lg font-bold text-gray-700 mb-4">Sentiment Distribution</h2>
+        <div class="w-full bg-gray-200 rounded-full h-8 flex overflow-hidden shadow-inner">
+            <div style="width: {{ (sentiment.positive / total_docs * 100) }}%"
+                class="bg-emerald-500 h-full flex items-center justify-center text-[10px] text-white font-bold transition-all duration-500">
+                {% if sentiment.positive > 0 %}{{ (sentiment.positive / total_docs * 100)|round|int }}%{% endif %}
+            </div>
+            <div style="width: {{ (sentiment.neutral / total_docs * 100) }}%"
+                class="bg-gray-400 h-full flex items-center justify-center text-[10px] text-white font-bold transition-all duration-500">
+                {% if sentiment.neutral > 0 %}{{ (sentiment.neutral / total_docs * 100)|round|int }}%{% endif %}
+            </div>
+            <div style="width: {{ (sentiment.negative / total_docs * 100) }}%"
+                class="bg-rose-500 h-full flex items-center justify-center text-[10px] text-white font-bold transition-all duration-500">
+                {% if sentiment.negative > 0 %}{{ (sentiment.negative / total_docs * 100)|round|int }}%{% endif %}
+            </div>
+        </div>
+        <div class="flex justify-between mt-2 text-[10px] font-bold uppercase tracking-widest text-gray-400">
+            <span>Optimistic</span>
+            <span>Objective</span>
+            <span>Critical</span>
+        </div>
+    </div>
+
+    <!-- Detailed Analysis -->
+    <div class="mt-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b-2 border-gray-100 pb-2">Analysis Breakdown</h2>
+        <div class="space-y-4">
+            {% for detail in sentiment.details %}
+            <div
+                class="p-4 bg-white border border-gray-100 rounded-lg shadow-sm hover:border-blue-200 transition-colors">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="flex items-center">
+                        {% if detail.label == 'Positive' %}
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 mr-2"></span>
+                        <span class="text-xs font-bold text-emerald-700 uppercase tracking-tighter">Positive
+                            Sentiment</span>
+                        {% elif detail.label == 'Negative' %}
+                        <span class="w-2 h-2 rounded-full bg-rose-500 mr-2"></span>
+                        <span class="text-xs font-bold text-rose-700 uppercase tracking-tighter">Negative
+                            Sentiment</span>
+                        {% else %}
+                        <span class="w-2 h-2 rounded-full bg-gray-400 mr-2"></span>
+                        <span class="text-xs font-bold text-gray-600 uppercase tracking-tighter">Neutral /
+                            Objective</span>
+                        {% endif %}
+                    </div>
+                    <span class="text-[10px] font-mono text-gray-400">Intensity: {{ "%.4f"|format(detail.score)
+                        }}</span>
+                </div>
+                <p class="text-sm text-gray-700 leading-relaxed italic">"{{ detail.content[:250] }}..."</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="mt-12 text-center">
+        <a href="/" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-bold text-sm">
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18">
+                </path>
+            </svg>
+            Return to Knowledge Base
+        </a>
+    </div>
+</div>
+{% endblock %}

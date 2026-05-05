@@ -1,13 +1,52 @@
-<header class="bg-gray-300 border-b border-gray-200 px-4">
-    <nav class="max-w-7xl mxa-auto sm:px-6 lg:px-8">
-        <div class="w-full py-6 flex items-center justify-between">
-            <form action="/search" , method="POST">
-                <input type="text" name="query" placeholder="Search here..."
-                    class="border border-red-300 rounded-md px-2 py-1 focus:outline-none">
-                <button type="submit"
-                    class="bg-blue-500 focus:outline-none px-4 py-1 text-white rounded-md">Search</button>
+<header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 shadow-sm">
+    <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-14 gap-4">
+
+            <!-- Logo Section (Left) -->
+            <div class="flex-1 flex items-center">
+                <a href="/"
+                    class="text-xl font-bold tracking-tight text-blue-600 hover:text-blue-700 transition-colors">HTB</a>
+            </div>
+
+            <!-- Search Section (Center) -->
+            <div class="hidden sm:flex flex-shrink-0 w-full max-w-xs px-2 mt-2">
+                <form action="/search" method="POST" class="relative w-full group">
+                    <input type="text" name="query" placeholder="Search knowledge base..."
+                        class="w-full border border-gray-200 rounded-full py-1.5 pl-4 pr-10 text-xs focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all bg-gray-50/50 group-hover:bg-white group-hover:shadow-sm">
+                    <button type="submit"
+                        class="absolute right-1 top-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-700 p-1.5 text-white rounded-full transition-colors shadow-sm">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Navigation Section (Right) -->
+            <div class="flex-1 flex items-center justify-end space-x-3">
+                <div
+                    class="hidden md:flex items-center space-x-4 text-[10px] font-bold uppercase tracking-widest text-gray-500">
+                    <a href="/topics" class="hover:text-blue-600 transition-colors">Topics</a>
+                    <a href="/modeling" class="hover:text-blue-600 transition-colors">Modeling</a>
+                </div>
+                <a href="/"
+                    class="text-[10px] font-bold text-gray-700 border border-gray-200 px-3 py-1.5 rounded-md hover:bg-gray-50 bg-white transition-all shadow-sm">HOME</a>
+            </div>
+        </div>
+
+        <!-- Mobile Search (Small Screens Only) -->
+        <div class="sm:hidden pb-3">
+            <form action="/search" method="POST" class="relative flex items-center">
+                <input type="text" name="query" placeholder="Search..."
+                    class="w-full border border-gray-200 rounded-lg py-2 px-3 text-xs outline-none bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
+                <button type="submit" class="absolute right-2 bg-blue-600 p-1.5 text-white rounded-md shadow-sm">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </button>
             </form>
-            <a href="/">Back to home</a>
         </div>
     </nav>
 </header>

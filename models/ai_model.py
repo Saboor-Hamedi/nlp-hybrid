@@ -1,5 +1,6 @@
-from sentence_transformers import SentenceTransformer
 import threading
+
+from sentence_transformers import SentenceTransformer
 
 # Thread-safe Singleton for AI Model
 _model_instance = None
