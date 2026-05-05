@@ -19,14 +19,44 @@ async def quick_search(
     conn = Depends(get_async_db),
     model = Depends(get_nlp_model)
 ):
-    """Instant search endpoint for the command palette with auto-validation."""
-    # We use the same robust hybrid engine but limit to top 5 for speed
+    """Instant search endpoint for the command palette with thematic context."""
     results, _ = await search_hybrid_async(query, conn, model, top_k=5)
     
-    formatted = [
-        {"id": r[0], "content": r[1][:80] + "...", "score": f"{r[2]:.2f}"}
-        for r in results
-    ]
+    # Fast-track Topic Analysis for the top 5
+    training_data = [r[1] for r in results]
+    formatted = []
+    
+    if training_data:
+        try:
+            # Perform ultra-fast thematic discovery on the limited sample
+            lda_topics, lda_model, dictionary = await anyio.to_thread.run_sync(
+                get_topics, training_data, min(3, len(training_data))
+            )
+            
+            for r in results:
+                # Predict Topic and extract top 5 keywords for the Signal Matrix
+                topic_id = await anyio.to_thread.run_sync(predict_topic, r[1], lda_model, dictionary)
+                
+                # Get the keywords for this specific topic
+                kw_str = ""
+                try:
+                    topic_info = lda_topics[topic_id][1]
+                    # Parse "0.012*"internal" + 0.011*"layer"" into "internal, layer"
+                    kw_str = ", ".join([w.split('*')[1].replace('"', '') for w in topic_info.split(' + ')[:5]])
+                except: pass
+
+                formatted.append({
+                    "id": r[0], 
+                    "content": r[1][:80] + "...", 
+                    "score": f"{r[2]:.2f}",
+                    "topic": f"LDA Theme {topic_id + 1}",
+                    "keywords": kw_str
+                })
+        except:
+            # Fallback if analysis fails (speed priority)
+            for r in results:
+                formatted.append({"id": r[0], "content": r[1][:80] + "...", "score": f"{r[2]:.2f}", "topic": "N/A"})
+    
     return formatted
 
 @router.get("/search", response_class=HTMLResponse)

@@ -75,18 +75,59 @@
         }
     });
 
+    // Initial sync
+    const saved = localStorage.getItem('theme') || 'light';
+    if (window.setTheme) setTheme(saved);
+    
+    // Load Forensic Settings
+    const forensicSaved = JSON.parse(localStorage.getItem('forensic_config') || '{}');
+    Object.keys(forensicSaved).forEach(key => {
+        const el = document.getElementById(`toggle-clean-${key}`);
+        if (el) el.checked = forensicSaved[key];
+    });
+
     window.saveSettings = function() {
+        // Collect Forensic Toggle States
+        const forensicSettings = {
+            academic: document.getElementById('toggle-clean-academic')?.checked,
+            pdf: document.getElementById('toggle-clean-pdf')?.checked,
+            math: document.getElementById('toggle-clean-math')?.checked,
+            numerical: document.getElementById('toggle-clean-num')?.checked
+        };
+
+        console.log('Pushing Forensic Configuration:', forensicSettings);
+
         // Show cleaning notification
         if (window.showToast) showToast('Initiating forensic cleaning...', 'info');
         
-        // Simulate save
+        // UI Feedback
         const btn = document.querySelector('button[onclick="saveSettings()"]');
+        const originalText = btn ? btn.innerHTML : 'Update';
         if (btn) btn.innerHTML = '<div class="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto"></div>';
         
-        setTimeout(() => {
-            if (btn) btn.innerHTML = 'Update';
-            showToast('Settings Updated', 'success');
-            toggleSettings();
-        }, 800);
+        // Execute Forensic Sweep via API
+        fetch('/api/maintenance/sweep', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(forensicSettings)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (btn) btn.innerHTML = originalText;
+            
+            if (data.status === 'success') {
+                showToast(`Calibration Complete (${data.latency})`, 'success');
+                // Save to local persistence
+                localStorage.setItem('forensic_config', JSON.stringify(forensicSettings));
+                setTimeout(toggleSettings, 800);
+            } else {
+                showToast('Sweep Failed: ' + data.message, 'error');
+            }
+        })
+        .catch(err => {
+            if (btn) btn.innerHTML = originalText;
+            showToast('Network Error: Forensic Engine Unreachable', 'error');
+            console.error(err);
+        });
     };
 })();

@@ -19,39 +19,99 @@
 {% endif %}
 
 {% if results %}
+
+<!-- Thematic Briefing Matrix: Global Cluster Summary -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+    <!-- LDA Summary -->
+    <div class="theme-bg rounded-xl border theme-border overflow-hidden">
+        <div class="p-4 border-b theme-border bg-purple-500/5">
+            <h2 class="text-[10px] font-bold text-purple-500 uppercase tracking-widest">LDA Probabilistic Themes</h2>
+        </div>
+        <div class="p-2">
+            <table class="w-full text-left">
+                <tbody class="divide-y theme-border">
+                    {% for id, words in lda_topics %}
+                    <tr class="hover:bg-gray-50/5 transition-colors">
+                        <td class="px-4 py-3 w-16 text-[9px] font-bold theme-text-sec uppercase tracking-widest">#{{ id + 1 }}</td>
+                        <td class="px-4 py-3">
+                            <div class="flex flex-wrap gap-1">
+                                {% for word in words.split(' + ') %}
+                                <span class="text-[8px] bg-purple-500/10 text-purple-600 dark:text-purple-300 px-1.5 py-0.5 rounded border border-purple-500/10">{{ word.split('*')[1]|replace('"', '') }}</span>
+                                {% endfor %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- BERT Summary -->
+    <div class="theme-bg rounded-xl border theme-border overflow-hidden">
+        <div class="p-4 border-b theme-border bg-indigo-500/5">
+            <h2 class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">BERT Contextual Themes</h2>
+        </div>
+        <div class="p-2">
+            <table class="w-full text-left">
+                <tbody class="divide-y theme-border">
+                    {% for id, words in bert_topics %}
+                    <tr class="hover:bg-gray-50/5 transition-colors">
+                        <td class="px-4 py-3 w-16 text-[9px] font-bold theme-text-sec uppercase tracking-widest">#{{ id + 1 }}</td>
+                        <td class="px-4 py-3">
+                            <div class="flex flex-wrap gap-1">
+                                {% for word in words.split(', ') %}
+                                <span class="text-[8px] bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 px-1.5 py-0.5 rounded border border-indigo-500/10">{{ word }}</span>
+                                {% endfor %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="mb-4 px-2 border-b theme-border pb-2">
+    <h2 class="text-[10px] font-bold theme-text-sec uppercase tracking-widest opacity-40">Document Correlation Stream</h2>
+</div>
+
 <div class="space-y-4">
     {% for result in results %}
-    <div class="bg-white p-7 rounded-xl border border-gray-100 hover:border-gray-200 transition-all duration-200">
+    <div class="theme-bg p-7 rounded-xl border theme-border hover:border-blue-500 transition-all duration-200 group">
         <div class="flex items-start justify-between gap-6">
             <div class="flex-1">
-                <div class="flex items-center gap-3 mb-4">
-                    <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest bg-gray-50 px-2 py-0.5 rounded border border-gray-100">DOC #{{ result.id }}</span>
-                    <span class="text-[9px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded uppercase tracking-widest border border-green-100/50">Score: {{ "%.2f"|format(result.relevance_score) }}</span>
+                <div class="flex items-center flex-wrap gap-3 mb-4">
+                    <span class="text-[9px] font-bold theme-text-sec opacity-60 uppercase tracking-widest bg-gray-50/10 px-2 py-0.5 rounded border theme-border">DOC #{{ result.id }}</span>
+                    <span class="text-[9px] font-bold text-green-600 bg-green-50/10 px-2 py-0.5 rounded uppercase tracking-widest border border-green-100/30">Score: {{ "%.2f"|format(result.relevance_score) }}</span>
+                    <span class="text-[9px] font-bold text-purple-600 dark:text-purple-300 bg-purple-50 dark:bg-purple-900/30 px-2 py-0.5 rounded uppercase tracking-widest border border-purple-100/50 dark:border-purple-500/20">{{ result.lda_topic_label }}</span>
+                    <span class="text-[9px] font-bold text-indigo-600 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-0.5 rounded uppercase tracking-widest border border-indigo-100/50 dark:border-indigo-500/20">{{ result.bert_topic_label }}</span>
                 </div>
                 
-                <h2 class="text-gray-900 font-bold text-base mb-3 leading-snug">{{ result.content[:140] }}...</h2>
+                <h2 class="theme-text font-bold text-base mb-3 leading-snug group-hover:text-blue-600 transition-colors">{{ result.content[:140] }}...</h2>
                 
-                <p class="text-gray-500 text-xs leading-relaxed mb-6 font-light line-clamp-2">
+                <p class="theme-text-sec text-xs leading-relaxed mb-6 font-light line-clamp-2 opacity-70">
                     {{ result.content }}
                 </p>
 
                 <!-- Signal Correlation Matrix -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 border-l-2 border-gray-50 pl-5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 border-l-2 theme-border pl-5">
                     <div>
-                        <p class="text-[9px] font-bold text-purple-600 uppercase tracking-widest mb-2">LDA Probabilistic</p>
+                        <p class="text-[9px] font-bold text-purple-500 uppercase tracking-widest mb-2">LDA Probabilistic</p>
                         <div class="flex flex-wrap gap-1">
                             {% for keyword, weight in result.lda_keywords.items() %}
-                            <span class="text-[9px] bg-purple-50/50 text-purple-700 px-2 py-0.5 rounded border border-purple-100/30 font-medium">
+                            <span class="text-[9px] bg-purple-500/10 text-purple-600 dark:text-purple-300 px-2 py-0.5 rounded border border-purple-500/10 font-medium">
                                 {{ keyword }}
                             </span>
                             {% endfor %}
                         </div>
                     </div>
                     <div>
-                        <p class="text-[9px] font-bold text-indigo-600 uppercase tracking-widest mb-2">BERT Contextual</p>
+                        <p class="text-[9px] font-bold text-indigo-500 uppercase tracking-widest mb-2">BERT Contextual</p>
                         <div class="flex flex-wrap gap-1">
                             {% for keyword, weight in result.bert_keywords.items() %}
-                            <span class="text-[9px] bg-indigo-50/50 text-indigo-700 px-2 py-0.5 rounded border border-indigo-100/30 font-medium">
+                            <span class="text-[9px] bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 px-2 py-0.5 rounded border border-indigo-500/10 font-medium">
                                 {{ keyword }}
                             </span>
                             {% endfor %}
@@ -59,7 +119,7 @@
                     </div>
                 </div>
                 
-                <div class="flex items-center gap-4 text-[9px] font-bold text-gray-400 uppercase tracking-widest">
+                <div class="flex items-center gap-4 text-[9px] font-bold theme-text-sec opacity-40 uppercase tracking-widest">
                     <span class="flex items-center gap-1.5">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"></path></svg>
                         {{ result.language }}
@@ -71,7 +131,8 @@
                 </div>
             </div>
             
-            <a href="/show/{{ result.id }}" class="shrink-0 text-[10px] font-bold text-blue-600 uppercase tracking-widest hover:text-blue-800 transition-all border-b border-blue-200">
+            <a href="/show/{{ result.id }}?lda={{ result.lda_topic_label|urlencode }}&bert={{ result.bert_topic_label|urlencode }}&lda_kw={{ result.lda_keywords.keys()|join(',')|urlencode }}&bert_kw={{ result.bert_keywords.keys()|join(',')|urlencode }}" 
+               class="shrink-0 text-[10px] font-bold text-blue-600 uppercase tracking-widest hover:text-blue-800 transition-all border-b border-blue-200">
                 Details
             </a>
         </div>
@@ -80,8 +141,8 @@
 </div>
 
 {% elif query %}
-<div class="text-center py-20 bg-gray-50 rounded-xl border border-gray-100">
-    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">No active correlations found.</p>
+<div class="text-center py-20 theme-bg rounded-xl border theme-border">
+    <p class="text-[10px] font-bold theme-text-sec opacity-50 uppercase tracking-widest">No active correlations found.</p>
 </div>
 {% endif %}
 

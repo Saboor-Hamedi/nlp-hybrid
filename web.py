@@ -36,15 +36,24 @@ async def global_exception_handler(request: Request, exc: Exception):
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Module Registration (APIRouter)
+from api.routers import home, search, topics, modeling, maintenance
 app.include_router(home.router)
 app.include_router(search.router)
 app.include_router(topics.router)
 app.include_router(modeling.router)
+app.include_router(maintenance.router)
+
+from db.operations.AsyncDocumentManager import AsyncDocumentManager
 
 @app.on_event("startup")
 async def startup_event():
-    """Verify database connectivity on startup."""
-    await get_db_pool()
+    """Verify database connectivity and initialize forensic logic."""
+    pool = await get_db_pool()
+    async with pool.acquire() as conn:
+        # Initialize the Modular Forensic Engine
+        manager = AsyncDocumentManager(conn, None) # No model needed for SQL init
+        await manager.initialize_engine()
+    print("🚀 Neural Forensic Suite - System Ready.")
 
 @app.on_event("shutdown")
 async def shutdown_event():

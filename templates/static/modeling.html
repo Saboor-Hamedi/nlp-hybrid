@@ -11,14 +11,66 @@
 
 <!-- Sentiment Overview -->
 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-    <!-- Visual Chart Placeholder -->
+    <!-- Visual Chart -->
     <div class="theme-bg rounded-xl border theme-border p-8 flex flex-col items-center justify-center min-h-[300px] text-center">
-        <div class="w-12 h-12 theme-bg-sec theme-text-sec opacity-40 rounded-xl flex items-center justify-center mb-6">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <canvas id="sentimentChart" class="max-h-[220px] w-full"></canvas>
+        <div class="mt-6">
+            <h3 class="text-sm font-bold theme-text mb-2 uppercase tracking-widest">Sentiment Distribution</h3>
+            <p class="text-[10px] theme-text-sec opacity-60 max-w-xs mx-auto">Neural extraction of tone distribution across the active document cluster.</p>
         </div>
-        <h3 class="text-sm font-bold theme-text mb-2 uppercase tracking-widest">Sentiment Distribution</h3>
-        <p class="text-[10px] theme-text-sec opacity-60 max-w-xs mx-auto">Neural extraction of tone distribution across the active document cluster.</p>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('sentimentChart').getContext('2d');
+            const isDark = document.documentElement.classList.contains('dark');
+            
+            const data = {
+                labels: ['Positive', 'Negative', 'Neutral'],
+                datasets: [{
+                    data: [{{ stats.pos_pct }}, {{ stats.neg_pct }}, {{ stats.neu_pct }}],
+                    backgroundColor: [
+                        '#22c55e', // Green-500
+                        '#ef4444', // Red-500
+                        isDark ? '#6366f1' : '#4f46e5' // Indigo-500/600
+                    ],
+                    borderColor: isDark ? '#1e293b' : '#ffffff',
+                    borderWidth: 2,
+                    hoverOffset: 10
+                }]
+            };
+
+            const options = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: isDark ? '#0f172a' : '#ffffff',
+                        titleColor: isDark ? '#f1f5f9' : '#1e293b',
+                        bodyColor: isDark ? '#94a3b8' : '#64748b',
+                        borderColor: isDark ? '#334155' : '#e2e8f0',
+                        borderWidth: 1,
+                        padding: 10,
+                        bodyFont: {
+                            family: 'Inter',
+                            size: 11
+                        }
+                    }
+                },
+                cutout: '75%'
+            };
+
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: data,
+                options: options
+            });
+        });
+    </script>
 
     <!-- Detailed Scores -->
     <div class="theme-bg rounded-xl border theme-border overflow-hidden">

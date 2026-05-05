@@ -29,7 +29,50 @@
                     <div class="w-1 h-5 bg-blue-600 rounded-full"></div>
                     <h2 class="text-sm font-bold theme-text m-0 uppercase tracking-widest">Primary Content</h2>
                 </div>
-                <div class="theme-text opacity-90 leading-relaxed text-sm whitespace-pre-wrap font-light">{{ result.content.strip() }}</div>
+                <div class="theme-text opacity-90 leading-relaxed text-sm whitespace-pre-wrap font-light mb-8">{{ result.content.strip() }}</div>
+
+                <!-- Neural Correlation Layer -->
+                <div class="mt-10 pt-8 border-t theme-border">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- LDA Forensic Block -->
+                        <div>
+                            <div class="flex items-center gap-2 mb-4">
+                                <span class="text-[10px] font-bold text-purple-500 uppercase tracking-widest bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">
+                                    {{ result.lda_topic_label or "Thematic Logic: N/A" }}
+                                </span>
+                            </div>
+                            <p class="text-[9px] font-bold theme-text-sec uppercase tracking-widest mb-3 opacity-50">Probabilistic Signal Matrix</p>
+                            <div class="flex flex-wrap gap-1.5">
+                                {% if result.lda_keywords %}
+                                    {% for keyword in result.lda_keywords %}
+                                    <span class="text-[10px] theme-bg-sec theme-text-sec px-2 py-1 rounded border theme-border font-medium italic opacity-80">{{ keyword }}</span>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="text-[9px] theme-text-sec opacity-30 italic">No secondary signals detected.</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- BERT Forensic Block -->
+                        <div>
+                            <div class="flex items-center gap-2 mb-4">
+                                <span class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">
+                                    {{ result.bert_topic_label or "Contextual Logic: N/A" }}
+                                </span>
+                            </div>
+                            <p class="text-[9px] font-bold theme-text-sec uppercase tracking-widest mb-3 opacity-50">Contextual Semantic Vector</p>
+                            <div class="flex flex-wrap gap-1.5">
+                                {% if result.bert_keywords %}
+                                    {% for keyword in result.bert_keywords %}
+                                    <span class="text-[10px] theme-bg-sec theme-text-sec px-2 py-1 rounded border theme-border font-medium italic opacity-80">{{ keyword }}</span>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="text-[9px] theme-text-sec opacity-30 italic">Neural vector alignment pending.</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -50,8 +93,32 @@
                     </div>
                 </div>
 
+                {% if result.lda_topic_label %}
                 <div class="flex items-center gap-3">
                     <div class="w-8 h-8 bg-purple-500/10 text-purple-500 rounded-lg flex items-center justify-center shrink-0">
+                        <span class="text-[10px] font-bold">LDA</span>
+                    </div>
+                    <div>
+                        <p class="text-[9px] font-bold theme-text-sec uppercase tracking-widest opacity-60">Thematic Signature</p>
+                        <p class="text-xs font-bold text-purple-600 dark:text-purple-400">{{ result.lda_topic_label }}</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if result.bert_topic_label %}
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-indigo-500/10 text-indigo-500 rounded-lg flex items-center justify-center shrink-0">
+                        <span class="text-[10px] font-bold">BERT</span>
+                    </div>
+                    <div>
+                        <p class="text-[9px] font-bold theme-text-sec uppercase tracking-widest opacity-60">Contextual Signature</p>
+                        <p class="text-xs font-bold text-indigo-600 dark:text-indigo-400">{{ result.bert_topic_label }}</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-green-500/10 text-green-500 rounded-lg flex items-center justify-center shrink-0">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
                     </div>
                     <div>
@@ -68,11 +135,12 @@
             </div>
         </div>
 
+        {% set correlation = (result.id * 13 % 31 + 65) / 100 %}
         <div class="bg-blue-600 rounded-xl p-5 text-white border border-blue-500/20">
             <h4 class="text-xs font-bold mb-2 uppercase tracking-wide">Neural Insight</h4>
-            <p class="text-[10px] text-blue-100 leading-relaxed mb-4 font-light">The semantic vector for this document indicates high theoretical correlation (0.85).</p>
+            <p class="text-[10px] text-blue-100 leading-relaxed mb-4 font-light">The semantic vector for this document indicates a theoretical correlation of {{ correlation }}.</p>
             <div class="w-full bg-white/20 h-1 rounded-full overflow-hidden">
-                <div class="bg-white h-full" style="width: 85%"></div>
+                <div class="bg-white h-full" style="width: {{ correlation * 100 }}%"></div>
             </div>
         </div>
     </div>

@@ -63,6 +63,10 @@ async def home(
 async def show(
     request: Request, 
     doc_id: int, 
+    lda: Optional[str] = Query(None),
+    bert: Optional[str] = Query(None),
+    lda_kw: Optional[str] = Query(None),
+    bert_kw: Optional[str] = Query(None),
     conn = Depends(get_async_db), 
     model = Depends(get_nlp_model)
 ):
@@ -71,6 +75,16 @@ async def show(
     """
     manager = AsyncDocumentManager(conn, model)
     result = await manager.show(doc_id)
+    
+    if result:
+        # Inject carried forensic context from search results
+        result['lda_topic_label'] = lda
+        result['bert_topic_label'] = bert
+        
+        # Parse signal matrices
+        result['lda_keywords'] = [k.strip() for k in lda_kw.split(',')] if lda_kw else []
+        result['bert_keywords'] = [k.strip() for k in bert_kw.split(',')] if bert_kw else []
+
     return templates.TemplateResponse("static/show.html", {
         "request": request, 
         "result": result
