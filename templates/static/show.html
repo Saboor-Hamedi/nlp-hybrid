@@ -41,12 +41,19 @@
                                     {{ result.lda_topic_label or "Thematic Logic: N/A" }}
                                 </span>
                             </div>
-                            <p class="text-[9px] font-bold theme-text-sec uppercase tracking-widest mb-3 opacity-50">Probabilistic Signal Matrix</p>
                             <div class="flex flex-wrap gap-1.5">
                                 {% if result.lda_keywords %}
-                                    {% for keyword in result.lda_keywords %}
-                                    <span class="text-[10px] theme-bg-sec theme-text-sec px-2 py-1 rounded border theme-border font-medium italic opacity-80">{{ keyword }}</span>
-                                    {% endfor %}
+                                    {% if result.lda_keywords is mapping %}
+                                        {% for keyword, weight in result.lda_keywords.items() %}
+                                        <span class="text-[10px] theme-bg-sec theme-text-sec px-2 py-1 rounded border theme-border font-medium opacity-80">
+                                            {{ keyword }} <span class="opacity-50 text-[8px] ml-0.5">{{ "%.2f"|format(weight) if weight != 1.0 else "" }}</span>
+                                        </span>
+                                        {% endfor %}
+                                    {% else %}
+                                        {% for keyword in result.lda_keywords %}
+                                        <span class="text-[10px] theme-bg-sec theme-text-sec px-2 py-1 rounded border theme-border font-medium opacity-80">{{ keyword }}</span>
+                                        {% endfor %}
+                                    {% endif %}
                                 {% else %}
                                     <span class="text-[9px] theme-text-sec opacity-30 italic">No secondary signals detected.</span>
                                 {% endif %}
@@ -64,7 +71,7 @@
                             <div class="flex flex-wrap gap-1.5">
                                 {% if result.bert_keywords %}
                                     {% for keyword in result.bert_keywords %}
-                                    <span class="text-[10px] theme-bg-sec theme-text-sec px-2 py-1 rounded border theme-border font-medium italic opacity-80">{{ keyword }}</span>
+                                    <span class="text-[10px] theme-bg-sec theme-text-sec px-2 py-1 rounded border theme-border font-medium opacity-80">{{ keyword }}</span>
                                     {% endfor %}
                                 {% else %}
                                     <span class="text-[9px] theme-text-sec opacity-30 italic">Neural vector alignment pending.</span>

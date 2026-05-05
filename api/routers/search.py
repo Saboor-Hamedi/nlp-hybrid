@@ -33,29 +33,52 @@ async def quick_search(
                 get_topics, training_data, min(3, len(training_data))
             )
             
+            # Fast BERT cluster for the palette
+            from utils.analytics.topic_modeling import get_bert_topics, predict_bert_topic
+            bert_topics, bert_kmeans = await anyio.to_thread.run_sync(
+                get_bert_topics, training_data, model, min(3, len(training_data))
+            )
+            
             for r in results:
-                # Predict Topic and extract top 5 keywords for the Signal Matrix
+                # Predict Topics and extract Signal Matrices
                 topic_id = await anyio.to_thread.run_sync(predict_topic, r[1], lda_model, dictionary)
+                bert_id = await anyio.to_thread.run_sync(predict_bert_topic, r[1], model, bert_kmeans)
                 
-                # Get the keywords for this specific topic
+                # LDA Keywords
                 kw_str = ""
                 try:
                     topic_info = lda_topics[topic_id][1]
-                    # Parse "0.012*"internal" + 0.011*"layer"" into "internal, layer"
                     kw_str = ", ".join([w.split('*')[1].replace('"', '') for w in topic_info.split(' + ')[:5]])
+                except: pass
+
+                # BERT Keywords
+                b_kw_str = ""
+                try:
+                    b_kw_str = bert_topics[bert_id][1] # BERT keywords are already joined strings
                 except: pass
 
                 formatted.append({
                     "id": r[0], 
                     "content": r[1][:80] + "...", 
                     "score": f"{r[2]:.2f}",
-                    "topic": f"LDA Theme {topic_id + 1}",
-                    "keywords": kw_str
+                    "lda_topic": f"LDA Theme {topic_id + 1}",
+                    "lda_keywords": kw_str,
+                    "bert_topic": f"BERT Theme {bert_id + 1}",
+                    "bert_keywords": b_kw_str
                 })
-        except:
+        except Exception as e:
             # Fallback if analysis fails (speed priority)
+            print(f"Quick-Search Analysis Timeout: {e}")
             for r in results:
-                formatted.append({"id": r[0], "content": r[1][:80] + "...", "score": f"{r[2]:.2f}", "topic": "N/A"})
+                formatted.append({
+                    "id": r[0], 
+                    "content": r[1][:80] + "...", 
+                    "score": f"{r[2]:.2f}", 
+                    "lda_topic": "N/A",
+                    "lda_keywords": "",
+                    "bert_topic": "N/A",
+                    "bert_keywords": ""
+                })
     
     return formatted
 
@@ -90,16 +113,31 @@ async def search(
     
     # Contextual Topic Discovery on search results
     training_data = [r[1] for r in results]
-    dynamic_k = max(1, min(5, len(training_data)))
+    # Scaled for forensic breadth (allowing up to 7 themes for dense results)
+    dynamic_k = max(1, min(7, len(training_data)))
 
     lda_topics, lda_model, dictionary = [], None, None
     bert_topics, bert_kmeans = [], None
+    lda_coherence = {}
 
     if training_data:
         try: 
+            # Train LDA
             lda_topics, lda_model, dictionary = await anyio.to_thread.run_sync(
                 get_topics, training_data, dynamic_k
             )
+            
+            # Calculate Coherence Scores for the discovered themes
+            # We use u_mass for speed in the search loop
+            from gensim.models import CoherenceModel
+            texts = [preprocess(doc) for doc in training_data]
+            corpus = [dictionary.doc2bow(text) for text in texts]
+            
+            cm = CoherenceModel(model=lda_model, corpus=corpus, dictionary=dictionary, coherence='u_mass')
+            # get_coherence_per_topic() returns a list of scores for each topic
+            coherence_per_topic = cm.get_coherence_per_topic()
+            lda_coherence = {i: score for i, score in enumerate(coherence_per_topic)}
+            
         except Exception as e: print(f"LDA Discovery Error: {e}")
             
         try: 
@@ -155,5 +193,6 @@ async def search(
         "results": results_dict, 
         "query": q,
         "lda_topics": lda_topics, 
-        "bert_topics": bert_topics
+        "bert_topics": bert_topics,
+        "lda_coherence": lda_coherence
     })

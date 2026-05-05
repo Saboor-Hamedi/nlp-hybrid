@@ -32,11 +32,20 @@
                 <tbody class="divide-y theme-border">
                     {% for id, words in lda_topics %}
                     <tr class="hover:bg-gray-50/5 transition-colors">
-                        <td class="px-4 py-3 w-16 text-[9px] font-bold theme-text-sec uppercase tracking-widest">#{{ id + 1 }}</td>
+                        <td class="px-4 py-3 w-32">
+                            <div class="flex flex-col">
+                                <span class="text-[9px] font-bold theme-text-sec uppercase tracking-widest">#{{ id + 1 }}</span>
+                                <span class="text-[8px] font-bold text-purple-500 opacity-60">CS: {{ "%.2f"|format(lda_coherence[id]) if lda_coherence and id in lda_coherence else "N/A" }}</span>
+                            </div>
+                        </td>
                         <td class="px-4 py-3">
                             <div class="flex flex-wrap gap-1">
-                                {% for word in words.split(' + ') %}
-                                <span class="text-[8px] bg-purple-500/10 text-purple-600 dark:text-purple-300 px-1.5 py-0.5 rounded border border-purple-500/10">{{ word.split('*')[1]|replace('"', '') }}</span>
+                                {% for segment in words.split(' + ') %}
+                                {% set parts = segment.split('*') %}
+                                <span class="text-[8px] bg-purple-500/10 text-purple-600 dark:text-purple-300 px-1.5 py-0.5 rounded border border-purple-500/10">
+                                    {{ parts[1]|replace('"', '') }} 
+                                    <span class="opacity-50 ml-0.5">{{ parts[0] }}</span>
+                                </span>
                                 {% endfor %}
                             </div>
                         </td>
@@ -102,7 +111,7 @@
                         <div class="flex flex-wrap gap-1">
                             {% for keyword, weight in result.lda_keywords.items() %}
                             <span class="text-[9px] bg-purple-500/10 text-purple-600 dark:text-purple-300 px-2 py-0.5 rounded border border-purple-500/10 font-medium">
-                                {{ keyword }}
+                                {{ keyword }} <span class="opacity-50 text-[8px] ml-0.5">{{ "%.2f"|format(weight) }}</span>
                             </span>
                             {% endfor %}
                         </div>
@@ -131,7 +140,7 @@
                 </div>
             </div>
             
-            <a href="/show/{{ result.id }}?lda={{ result.lda_topic_label|urlencode }}&bert={{ result.bert_topic_label|urlencode }}&lda_kw={{ result.lda_keywords.keys()|join(',')|urlencode }}&bert_kw={{ result.bert_keywords.keys()|join(',')|urlencode }}" 
+            <a href="/show/{{ result.id }}?lda={{ result.lda_topic_label|urlencode }}&bert={{ result.bert_topic_label|urlencode }}&lda_kw={{ result.lda_keywords.items()|map('join', ':')|join(',')|urlencode }}&bert_kw={{ result.bert_keywords.keys()|join(',')|urlencode if result.bert_keywords is mapping else result.bert_keywords|join(',')|urlencode }}" 
                class="shrink-0 text-[10px] font-bold text-blue-600 uppercase tracking-widest hover:text-blue-800 transition-all border-b border-blue-200">
                 Details
             </a>

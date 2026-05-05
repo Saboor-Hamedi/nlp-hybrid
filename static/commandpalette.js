@@ -104,17 +104,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
 
                 paletteResults.innerHTML = results.map(res => `
-                    <a href="/show/${res.id}?lda=${encodeURIComponent(res.topic)}&lda_kw=${encodeURIComponent(res.keywords)}" class="palette-item flex items-center justify-between p-3 rounded-xl transition-all group border border-transparent">
+                    <a href="/show/${res.id}?lda=${encodeURIComponent(res.lda_topic)}&lda_kw=${encodeURIComponent(res.lda_keywords)}&bert=${encodeURIComponent(res.bert_topic)}&bert_kw=${encodeURIComponent(res.bert_keywords)}" class="palette-item flex items-center justify-between p-3 rounded-xl transition-all group border border-transparent">
                         <div class="flex items-center gap-3">
                             <div class="w-8 h-8 theme-bg-sec border theme-border rounded-lg flex items-center justify-center theme-text-sec group-hover:text-blue-600 transition-all">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                             </div>
                             <div class="max-w-[340px]">
                                 <p class="text-xs font-bold theme-text line-clamp-1">${res.content}</p>
-                                <div class="flex items-center gap-2 mt-1">
-                                    <span class="text-[9px] theme-text-sec opacity-40 uppercase tracking-tight">Record ID: #${res.id}</span>
-                                    <span class="text-[9px] font-bold text-purple-600 dark:text-purple-300 bg-purple-50 dark:bg-purple-900/30 px-1.5 py-0.5 rounded border border-purple-100/50 dark:border-purple-500/20 uppercase tracking-widest">${res.topic}</span>
-                                </div>
+                                <span class="text-[9px] theme-text-sec opacity-40 uppercase tracking-tight">Record ID: #${res.id}</span>
                             </div>
                         </div>
                         <div class="text-right">
