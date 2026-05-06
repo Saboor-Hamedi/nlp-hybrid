@@ -44,11 +44,29 @@ window.performUpdate = async function(docId) {
             toggleEditor();
 
             // Surgical DOM Update
-            const contentEl = document.getElementById(`doc-content-${docId}`);
-            if (contentEl) {
-                contentEl.innerText = content;
-                contentEl.classList.add('text-blue-500');
-                setTimeout(() => contentEl.classList.remove('text-blue-500'), 2000);
+            console.log(`[Neural Forge] Refinement complete for #${docId}. Syncing UI...`);
+            
+            // 1. Update snippets
+            const snippets = document.querySelectorAll(`.forensic-snippet-sync-${docId}`);
+            snippets.forEach(el => {
+                el.innerText = content;
+                el.classList.add('text-blue-500', 'font-bold');
+                setTimeout(() => el.classList.remove('text-blue-500', 'font-bold'), 2000);
+            });
+
+            // 2. Update card containers (flash effect)
+            const cards = document.querySelectorAll(`[id="forensic-card-${docId}"]`);
+            cards.forEach(card => {
+                card.classList.add('border-blue-500', 'ring-4', 'ring-blue-500/20');
+                setTimeout(() => card.classList.remove('border-blue-500', 'ring-4', 'ring-blue-500/20'), 2000);
+            });
+
+            // 3. Update main search content
+            const mainContent = document.getElementById(`doc-content-${docId}`);
+            if (mainContent) {
+                mainContent.innerText = content;
+                mainContent.classList.add('text-blue-500');
+                setTimeout(() => mainContent.classList.remove('text-blue-500'), 2000);
             }
         } else {
             const err = await response.json();

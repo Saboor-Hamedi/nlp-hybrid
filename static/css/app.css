@@ -42,7 +42,6 @@ html { scroll-behavior: smooth; }
 .glass-header { 
     background: var(--glass-bg); 
     backdrop-filter: blur(8px); 
-    border-bottom: 1px solid var(--border-color); 
 }
 
 /* Custom Scrollbars */

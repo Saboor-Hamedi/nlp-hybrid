@@ -66,3 +66,12 @@ async def forensic_sweep(
     manager = AsyncDocumentManager(conn, model)
     result = await manager.apply_forensic_sweep(config)
     return result
+@router.post("/api/maintenance/purge")
+async def cluster_purge(conn = Depends(get_async_db)):
+    """Clear all non-correlative document fragments (short records)."""
+    try:
+        # Purge records with less than 50 characters (considered fragments)
+        purged = await conn.fetchval("DELETE FROM document WHERE length(content) < 50 RETURNING count(*)")
+        return {"status": "success", "purged_count": purged or 0}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}

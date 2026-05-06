@@ -1,15 +1,14 @@
-<!-- Assistance Conversational Input Hub -->
-<div class="mt-auto border-t theme-border bg-white theme-bg shrink-0 z-20 p-1  flex items-center justify-center">
+<div class="mt-auto bg-white theme-bg shrink-0 z-20 px-4 py-4 flex items-center justify-center">
     <div
-        class="max-w-3xl w-full flex flex-col theme-bg-sec border theme-border rounded-sm shadow-sm group focus-within:border-blue-500/50 transition-all">
+        class="max-w-4xl w-full flex flex-col theme-bg-sec rounded-xl group transition-all">
         <!-- Input Area -->
         <div class="flex-1">
-            <textarea id="stream-query" class="w-full py-1 px-3 bg-transparent 
-                theme-text text-[11px] leading-tight 
+            <textarea id="stream-query" class="w-full py-2.5 px-4 bg-transparent 
+                theme-text text-[13px] leading-relaxed 
                 border-none outline-none focus:ring-0 
                 placeholder:theme-text placeholder:opacity-20 font-medium 
-                resize-none overflow-y-auto custom-scrollbar" style="height: 24px; min-height: 24px;"
-                placeholder="Assistance..." autocomplete="off"
+                resize-none overflow-y-auto custom-scrollbar" style="height: 44px; min-height: 44px;"
+                placeholder="Neural Assistance Research..." autocomplete="off"
                 onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); executeStreamSearch(); }"></textarea>
         </div>
 
@@ -20,11 +19,11 @@
                 <div
                     class="bg-gray-100/50 dark:bg-gray-800/50 p-0.5 rounded-lg flex items-center gap-0.5 border theme-border backdrop-blur-sm">
                     <button id="mode-local" onclick="setMode('local')"
-                        class="px-2 py-0.5 rounded-md text-[7px] font-bold uppercase tracking-widest transition-all bg-blue-600 text-white shadow-sm">
+                        class="px-3 py-1.5 rounded-md text-[8px] font-bold uppercase tracking-widest transition-all bg-blue-600 text-white shadow-sm">
                         RAG
                     </button>
                     <button id="mode-global" onclick="setMode('global')"
-                        class="px-2 py-0.5 rounded-md text-[7px] font-bold uppercase tracking-widest transition-all theme-text opacity-40 hover:opacity-100">
+                        class="px-3 py-1.5 rounded-md text-[8px] font-bold uppercase tracking-widest transition-all theme-text opacity-40 hover:opacity-100">
                         ASSIS
                     </button>
                 </div>
@@ -33,15 +32,15 @@
             <!-- Send Button -->
             <div class="flex items-center">
                 <button id="exec-btn" onclick="handlePulsarClick()"
-                    class="w-5 h-5 bg-blue-600 text-white rounded-lg flex items-center justify-center hover:bg-blue-700 active:scale-90 transition-all shadow-md shadow-blue-500/20">
+                    class="w-8 h-8 bg-blue-600 text-white rounded-xl flex items-center justify-center hover:bg-blue-700 active:scale-90 transition-all shadow-md shadow-blue-500/20">
                     <div id="exec-icon-send">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
                                 d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
                         </svg>
                     </div>
                     <div id="exec-icon-stop" class="hidden">
-                        <svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
                             <rect width="12" height="12" x="6" y="6" rx="1.5"></rect>
                         </svg>
                     </div>

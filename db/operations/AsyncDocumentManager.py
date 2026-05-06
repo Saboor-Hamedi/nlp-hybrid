@@ -104,36 +104,59 @@ class AsyncDocumentManager:
         try:
             status_msg = "Forensic cycle synchronized."
             
-            # 1. Lexical Normalization (Optimize BM25 indices)
-            if config.get('normalize', True):
-                # We use a dummy update to trigger the GIN index refresh or modular cleaning
-                await self.conn.execute("UPDATE document SET language = 'insight' WHERE language = 'insight'")
-                processed += 1 
+            # 1. Modular Forensic Cleaning (Batched)
+            do_academic = config.get('academic', False)
+            do_pdf = config.get('pdf', False)
+            do_math = config.get('math', False)
+            do_num = config.get('numerical', False)
 
-            # 2. Neural Re-indexing (Re-vectorize with Safety Batching)
-            if config.get('revectorize', False):
-                # Safety Limit: Only process 100 documents per sweep to prevent OOM/Timeout
-                batch_limit = 100
-                docs_to_vectorize = await self.conn.fetch(
-                    "SELECT id, content FROM document WHERE id NOT IN (SELECT doc_id FROM document_embedding) LIMIT $1", 
-                    batch_limit
-                )
-                
-                for doc in docs_to_vectorize:
-                    embedding = self.model.encode(doc['content']).tolist()
-                    await self.conn.execute(
-                        "INSERT INTO document_embedding (doc_id, embedding) VALUES ($1, $2::vector)", 
-                        doc['id'], str(embedding)
-                    )
-                    processed += 1
-                
-                # Check if there are more pending
-                remaining = await self.conn.fetchval(
-                    "SELECT COUNT(*) FROM document WHERE id NOT IN (SELECT doc_id FROM document_embedding)"
-                )
-                
-                if remaining > 0:
-                    status_msg = f"Batch complete. {remaining} records still pending indexing."
+            if any([do_academic, do_pdf, do_math, do_num]):
+                try:
+                    batch_limit = 100
+                    print(f"🧹 Running batched modular cleaning (limit {batch_limit}): Acad={do_academic}, PDF={do_pdf}, Math={do_math}, Num={do_num}")
+                    
+                    res = await self.conn.execute("""
+                        UPDATE document 
+                        SET content = clean_garbage_modular(content, $1, $2, $3, $4)
+                        WHERE id IN (
+                            SELECT id FROM document 
+                            WHERE content IS NOT NULL 
+                            ORDER BY id ASC 
+                            LIMIT $5
+                        )
+                    """, do_academic, do_pdf, do_math, do_num, batch_limit)
+                    
+                    # Extract count from "UPDATE N" status
+                    cleaned_in_batch = int(res.split()[-1])
+                    processed += cleaned_in_batch
+                except Exception as clean_err:
+                    print(f"❌ Modular Cleaning Failed: {repr(clean_err)}")
+                    raise Exception(f"Cleaning phase failure: {repr(clean_err)}")
+
+            # 2. Neural Re-indexing (Batched)
+            if config.get('revectorize', False) or processed > 0:
+                try:
+                    reindex_limit = 50
+                    print(f"🧠 Starting neural re-indexing batch (limit {reindex_limit})...")
+                    docs_to_vectorize = await self.conn.fetch("""
+                        SELECT id, content FROM document 
+                        ORDER BY id ASC 
+                        LIMIT $1
+                    """, reindex_limit)
+                    
+                    for doc in docs_to_vectorize:
+                        embedding = self.model.encode(doc['content']).tolist()
+                        await self.conn.execute("DELETE FROM document_embedding WHERE doc_id = $1", doc['id'])
+                        await self.conn.execute(
+                            "INSERT INTO document_embedding (doc_id, embedding) VALUES ($1, $2::vector)", 
+                            doc['id'], str(embedding)
+                        )
+                    
+                    processed += len(docs_to_vectorize)
+                    status_msg = f"Forensic sweep complete. Modular cleaning applied to {processed} records."
+                except Exception as vector_err:
+                    print(f"❌ Neural Re-indexing Failed: {repr(vector_err)}")
+                    raise Exception(f"Re-indexing phase failure: {repr(vector_err)}")
 
             return {
                 "status": "success", 
@@ -142,7 +165,8 @@ class AsyncDocumentManager:
                 "processed": processed
             }
         except Exception as e:
-            return {"status": "error", "message": str(e)}
+            print(f"🔥 Final Sweep Error: {repr(e)}")
+            return {"status": "error", "message": repr(e)}
 
     async def get_total_count(self) -> int:
         try:

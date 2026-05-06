@@ -61,6 +61,15 @@
                         </svg>
                         Security
                     </button>
+                    <button onclick="switchTab('assistance')"
+                        class="tab-btn w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[10px] font-bold theme-text-sec uppercase tracking-widest hover:bg-blue-500/5"
+                        data-tab="assistance">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                        Assistance
+                    </button>
                 </nav>
             </div>
 
@@ -178,26 +187,47 @@
                         <div class="p-4 rounded-lg border border-red-500/20 bg-red-50/5 mt-6">
                             <h4 class="text-[9px] font-bold text-red-500 uppercase tracking-widest mb-1">Advanced: Cluster Purge</h4>
                             <p class="text-[8px] theme-text-sec mb-3 opacity-70">Clear all non-correlative document fragments from the engine.</p>
-                            <button class="px-4 py-1.5 bg-red-500 text-white rounded-[5px] text-[9px] font-bold uppercase tracking-widest hover:bg-red-600 transition-all">Execute Purge</button>
+                            <button onclick="executeClusterPurge()" class="px-4 py-1.5 bg-red-500 text-white rounded-[5px] text-[9px] font-bold uppercase tracking-widest hover:bg-red-600 transition-all">Execute Purge</button>
                         </div>
                     </div>
 
                     <!-- Tab: Security -->
                     <div id="tab-security" class="tab-content hidden">
                         <div class="space-y-4">
-                            <label class="text-[9px] font-bold theme-text-sec uppercase tracking-widest ml-1">Forensic
-                                Endpoint</label>
+                            <label class="text-[9px] font-bold theme-text-sec uppercase tracking-widest ml-1">Forensic Endpoint</label>
                             <div class="flex items-center gap-2 p-1.5 pl-4 bg-gray-50/5 border theme-border rounded-lg">
-                                <span
-                                    class="text-[8px] theme-text font-mono flex-1 opacity-60 overflow-hidden text-ellipsis">api.neural-core.v2.1/v1/auth</span>
-                                <button
-                                    class="w-7 h-7 rounded-md theme-bg-sec border theme-border flex items-center justify-center theme-text-sec hover:text-blue-500 transition-all">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3">
-                                        </path>
-                                    </svg>
+                                <span class="text-[8px] theme-text font-mono flex-1 opacity-60 overflow-hidden text-ellipsis">api.neural-core.v2.1/v1/auth</span>
+                                <button class="w-7 h-7 rounded-md theme-bg-sec border theme-border flex items-center justify-center theme-text-sec hover:text-blue-500 transition-all">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
                                 </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Assistance -->
+                    <div id="tab-assistance" class="tab-content space-y-6 hidden">
+                        <div class="flex items-center justify-between p-4 rounded-xl border theme-border bg-gray-50/5">
+                            <div class="space-y-0.5">
+                                <p class="text-[9px] font-bold theme-text uppercase tracking-widest">Neural Assistance Engine</p>
+                                <p class="text-[8px] theme-text-sec opacity-50">Global master switch for AI synthesis and RAG</p>
+                            </div>
+                            <div class="flex items-center">
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="toggle-rag-engine" class="sr-only peer" onchange="updateRagState()">
+                                    <div class="w-8 h-4 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between p-4 rounded-xl border theme-border bg-gray-50/5">
+                            <div class="space-y-0.5">
+                                <p class="text-[9px] font-bold theme-text uppercase tracking-widest">Result Density</p>
+                                <p class="text-[8px] theme-text-sec opacity-50">Max forensic records per retrieval</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="number" id="rag-result-density" min="1" max="10" value="3" onchange="updateAssistantConfig()"
+                                    class="w-12 px-2 py-1 bg-gray-100 theme-bg-tert border theme-border rounded text-[10px] font-bold theme-text focus:outline-none focus:border-blue-500/50 transition-all text-center">
+                                <span class="text-[7px] theme-text-sec opacity-40 uppercase tracking-widest">Records</span>
                             </div>
                         </div>
                     </div>
