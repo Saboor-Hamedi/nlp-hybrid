@@ -9,7 +9,7 @@ from api.dependencies import templates
 
 # Initialize Core API
 app = FastAPI(
-    title="Neural Forensic Suite", 
+    title="Signal Forensic Suite", 
     description="High-performance, asynchronous NLP Document Analytics & Forensic Search API.",
     version="2.1.0"
 )
@@ -33,7 +33,7 @@ async def global_exception_handler(request: Request, exc: Exception):
         )
     
     # Fallback for HTML pages
-    return templates.TemplateResponse("static/content.html", {
+    return templates.TemplateResponse("pages/content.html", {
         "request": request,
         "error": f"Forensic Engine Failure: {err_msg}"
     })

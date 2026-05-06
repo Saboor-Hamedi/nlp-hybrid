@@ -101,7 +101,7 @@ async def search(
         validated = SearchQuery(query=q_str)
         q = validated.query
     except Exception as e:
-        return templates.TemplateResponse("static/search.html", {
+        return templates.TemplateResponse("pages/search.html", {
             "request": request, 
             "results": [], 
             "query": q_str, 
@@ -188,7 +188,7 @@ async def search(
             "bert_keywords": bert_keywords
         })
 
-    return templates.TemplateResponse("static/search.html", {
+    return templates.TemplateResponse("pages/search.html", {
         "request": request, 
         "results": results_dict, 
         "query": q,

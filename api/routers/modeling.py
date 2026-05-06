@@ -24,7 +24,7 @@ async def show_modeling(request: Request, conn = Depends(get_async_db)):
         "neg_pct": (sentiment_data["negative"] / total) * 100 if total > 0 else 0,
     }
 
-    return templates.TemplateResponse("static/modeling.html", {
+    return templates.TemplateResponse("pages/modeling.html", {
         "request": request, 
         "sentiment": sentiment_data["details"], 
         "stats": stats,

@@ -22,7 +22,7 @@ async def show_topics(request: Request, conn = Depends(get_async_db), model = De
         # find_best_k and get_topics are CPU-bound
         best_k, coherence_scores = await anyio.to_thread.run_sync(find_best_k, all_contents, range(2, 7))
         await anyio.to_thread.run_sync(plot_coherence, coherence_scores, best_k)
-        coherence_image = "/static/coherence_scores.png"
+        coherence_image = "/static/img/coherence_scores.png"
 
         lda_results, lda_model, dictionary = await anyio.to_thread.run_sync(get_topics, all_contents, best_k)
         bert_results, bert_kmeans = await anyio.to_thread.run_sync(get_bert_topics, all_contents, model, best_k)
@@ -39,7 +39,7 @@ async def show_topics(request: Request, conn = Depends(get_async_db), model = De
                 "lda_tag": f"LDA {lda_id + 1}", "bert_tag": f"BERT {bert_id + 1}"
             })
 
-        return templates.TemplateResponse("static/topics.html", {
+        return templates.TemplateResponse("pages/topics.html", {
             "request": request, 
             "lda_topics": lda_results, 
             "bert_topics": bert_results,

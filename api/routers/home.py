@@ -53,7 +53,7 @@ async def home(
     else:
         results = []
 
-    return templates.TemplateResponse("static/content.html", {
+    return templates.TemplateResponse("pages/content.html", {
         "request": request, 
         "results": results, 
         "query": search_query,
@@ -131,7 +131,7 @@ async def show(
         if not result.get('bert_keywords'):
             result['bert_keywords'] = [k.strip() for k in bert_kw.split(',') if k.strip()] if bert_kw and bert_kw != 'undefined' else []
 
-    return templates.TemplateResponse("static/show.html", {
+    return templates.TemplateResponse("pages/show.html", {
         "request": request, 
         "result": result
     })

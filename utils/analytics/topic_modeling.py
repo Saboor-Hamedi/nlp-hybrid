@@ -154,7 +154,7 @@ def plot_coherence(coherence_scores, best_k=None):
 
         import os
         os.makedirs('static', exist_ok=True)
-        plt.savefig('static/coherence_scores.png', dpi=150, bbox_inches='tight', transparent=True)
+        plt.savefig('static/img/coherence_scores.png', dpi=150, bbox_inches='tight', transparent=True)
         plt.close()
     except Exception as e:
         print(f"Error plotting coherence: {e}")
