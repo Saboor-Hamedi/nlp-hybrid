@@ -15,9 +15,10 @@ class RAGMind:
         # Centralized Forensic Prompt Registry
         self.prompts = {
             "refinement": (
-                "You are a Forensic Research Assistant. Your task is to transform the provided text "
-                "based on the specific instruction: '{instruction}'. "
-                "Return ONLY the transformed text with no conversational filler or explanations."
+                "You are a Forensic Research Assistant. Your task is to process or generate text "
+                "based on the instruction: '{instruction}'. "
+                "If text is provided, transform it. If no text is provided, generate a new forensic "
+                "segment from scratch. Return ONLY the final text with no conversational filler."
             ),
             "synthesis": (
                 "You are a Forensic Analyst orchestrating a Signal Synthesis. "

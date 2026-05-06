@@ -14,7 +14,7 @@ window.performInsert = async function() {
 
         if (response.ok) {
             const data = await response.json();
-            showToast('New correlation injected into archive', 'success');
+            showToast('Document created', 'success');
             toggleEditor();
 
             // Fluid Prepend logic

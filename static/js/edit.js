@@ -17,8 +17,11 @@ window.openEditor = function(docId = null, existingContent = '') {
     
     const title = document.getElementById('editorTitle');
     const contentArea = document.getElementById('editorContent');
+    const submitBtn = document.getElementById('editorSubmitBtn');
     
     title.innerText = docId ? `Refining Document #${docId}` : 'Injecting New Correlation';
+    if (submitBtn) submitBtn.innerText = docId ? 'Edit' : 'Archive';
+    
     contentArea.value = existingContent;
     
     toggleEditor();
@@ -37,7 +40,7 @@ window.performUpdate = async function(docId) {
         });
 
         if (response.ok) {
-            showToast('Correlation updated successfully', 'success');
+            showToast('Document updated', 'success');
             toggleEditor();
 
             // Surgical DOM Update
@@ -65,9 +68,18 @@ window.refineCurrentContent = async function() {
     const rawText = editor.value;
     const prompt = promptInput.value;
     
-    if (!rawText.trim()) return showToast('Input required for refinement', 'info');
+    const activity = document.getElementById('neuralActivity');
+    const hint = document.getElementById('neuralPromptHint');
 
-    showToast(prompt ? `Neural Engine: Executing '${prompt}'...` : 'Neural Engine: Refining current workspace...', 'info');
+    if (!rawText.trim() && !prompt.trim()) return showToast('Neural Engine: Instruction or context required.', 'info');
+
+    // Enter Neural Loading State
+    if (activity) activity.classList.remove('hidden');
+    if (hint) hint.classList.add('hidden');
+    promptInput.disabled = true;
+    editor.classList.add('ghost-shimmer', 'opacity-50');
+    const originalPlaceholder = editor.placeholder;
+    editor.placeholder = " [ NEURAL SYNTHESIS IN PROGRESS... ]";
 
     try {
         const response = await fetch('/api/refine', {
@@ -84,49 +96,47 @@ window.refineCurrentContent = async function() {
         const data = await response.json();
         const refined = data.refined_text;
         
+        // Exit Neural Loading State
+        if (activity) activity.classList.add('hidden');
+        if (hint) hint.classList.remove('hidden');
+        promptInput.disabled = false;
+        editor.classList.remove('ghost-shimmer', 'opacity-50');
+        editor.placeholder = originalPlaceholder;
+        
         // Absolute DOM Override Sequence
         setTimeout(() => {
             try {
                 const targets = document.querySelectorAll('#editorContent');
                 targets.forEach(el => {
-                    el.readOnly = false;
-                    el.disabled = false;
-                    el.focus();
-                    
-                    window.getSelection().removeAllRanges();
-                    el.setSelectionRange(0, el.value.length);
-                    
-                    // Native RangeText Swap
-                    el.setRangeText(refined, 0, el.value.length, 'end');
-
-                    if (el.value !== refined) {
-                        document.execCommand('insertText', false, refined);
+                    // Simple, robust override for blank canvas generation
+                    if (!el.value.trim()) {
+                        el.value = refined;
+                    } else {
+                        // Surgical range replacement for existing content
+                        el.setSelectionRange(0, el.value.length);
+                        el.setRangeText(refined, 0, el.value.length, 'end');
                     }
-
-                    if (el.value !== refined) {
-                        const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
-                        nativeSetter.call(el, refined);
-                        el.innerText = refined;
-                    }
-
-                    const len = el.value.length;
-                    el.setSelectionRange(len, len);
+                    
                     el.dispatchEvent(new Event('input', { bubbles: true }));
                     el.dispatchEvent(new Event('change', { bubbles: true }));
 
-                    el.classList.add('ring-4', 'ring-blue-500/20', 'border-blue-500');
-                    setTimeout(() => el.classList.remove('ring-4', 'ring-blue-500/20', 'border-blue-500'), 800);
+                    el.classList.add('ring-4', 'ring-blue-500/30', 'border-blue-500');
+                    setTimeout(() => el.classList.remove('ring-4', 'ring-blue-500/30', 'border-blue-500'), 1000);
                 });
 
-                // Clear prompt on success
                 promptInput.value = '';
-                showToast('Neural Refinement applied to workspace.', 'success');
             } catch (err) {
                 console.error('Refinement Injection Error:', err);
                 editor.value = refined;
             }
         }, 150);
     } catch (error) {
+        // Emergency Reset on Failure
+        if (activity) activity.classList.add('hidden');
+        if (hint) hint.classList.remove('hidden');
+        promptInput.disabled = false;
+        editor.classList.remove('ghost-shimmer', 'opacity-50');
+        
         showToast(error.message, 'error');
     }
 };
