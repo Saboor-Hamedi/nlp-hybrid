@@ -254,7 +254,16 @@
                 const { done, value } = await reader.read();
                 if (done) break;
                 fullText += decoder.decode(value);
-                if (fullText.length > 0) document.getElementById(`${aiMsgId}-bubble`).classList.remove('hidden');
+                
+                // Kinetic Manifestation: Unhide with smooth transition
+                if (fullText.length > 0) {
+                    const bubble = document.getElementById(`${aiMsgId}-bubble`);
+                    if (bubble.classList.contains('hidden')) {
+                        bubble.classList.remove('hidden');
+                        bubble.classList.add('animate-in', 'fade-in', 'slide-in-from-top-2');
+                    }
+                }
+                
                 contentEl.innerHTML = marked.parse(fullText);
                 thread.scrollTop = thread.scrollHeight;
                 statusEl.innerText = "Responding...";
@@ -339,12 +348,29 @@
                         <h4 class="text-[9px] font-bold theme-text-sec uppercase tracking-widest opacity-40">Forensic Controls</h4>
                         <div class="flex flex-col gap-2">
                             <a href="/show/${data.id}" target="_blank" class="w-full py-2.5 bg-blue-600 text-white rounded-lg text-[10px] font-bold uppercase hover:bg-blue-700 transition-all text-center shadow-md shadow-blue-600/10">Open Full Dossier</a>
-                            <button onclick="deleteDocument(${data.id})" class="w-full py-2.5 text-red-500 text-[10px] font-bold uppercase hover:bg-red-500/10 transition-all">Purge from Archive</button>
+                            <button onclick="openEditor(${data.id}, \`${data.content.replace(/`/g, '\\`').replace(/\${/g, '\\${')}\`)" class="w-full py-2.5 bg-gray-100 dark:bg-gray-800 theme-text rounded-lg text-[10px] font-bold uppercase hover:bg-gray-200 dark:hover:bg-gray-700 transition-all text-center">Refine in Neural Forge</button>
+                            <button onclick="deleteDocument(${data.id})" class="w-full py-2.5 text-red-500 text-[10px] font-bold uppercase hover:bg-red-500/10 transition-all mt-2">Purge from Archive</button>
                         </div>
                     </section>
                 </div>
             `;
         } catch (error) { showToast('Inspection failed', 'error'); }
+    }
+    async function deleteDocument(id) {
+        if (!confirm('Are you sure you want to permanently purge this document?')) return;
+        try {
+            const response = await fetch(`/api/docs/${id}`, { method: 'DELETE' });
+            const data = await response.json();
+            if (data.status === 'success') {
+                showToast('Document purged from archive.', 'success');
+                // Reset Inspector instantly
+                document.getElementById('inspector-content').innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-64 opacity-20 text-center">
+                        <p class="text-[9px] font-bold uppercase tracking-widest">Select segment for<br>deep analytics</p>
+                    </div>
+                `;
+            } else { showToast('Purge failed', 'error'); }
+        } catch (error) { showToast('Network error', 'error'); }
     }
 </script>
 
