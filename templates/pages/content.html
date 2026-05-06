@@ -1,72 +1,36 @@
 {% extends 'layouts/base.html' %}
 
-{% block title %} Forensic Chat - Neural Forensic Suite {% endblock %}
+{% block title %} Assistance - Signal Archive {% endblock %}
 
 {% block content %}
 
-<!-- Forensic Command Center -->
-<div class="flex h-[calc(100vh-100px)] -m-6 md:-m-10 overflow-hidden theme-bg">
-    
-    <!-- Middle Column: The RAG Stream -->
+<!-- Assistance Command Center -->
+<div class="flex h-[calc(100vh-64px)] -m-6 md:-m-10 overflow-hidden theme-bg">
+
+    <!-- Middle Column: The Assistance Stream -->
     <div class="flex-1 flex flex-col border-r theme-border relative bg-gray-50/30 dark:bg-gray-900/10">
         <!-- The Chat Thread -->
-        <div id="forensic-thread" class="flex-1 overflow-y-auto p-6 space-y-12 custom-scrollbar pb-32">
+        <div id="forensic-thread" class="flex-1 overflow-y-auto p-5 space-y-12 custom-scrollbar pb-32">
             <div class="flex flex-col items-center justify-center h-full opacity-10 text-center">
-                <div class="w-10 h-10 mb-4 border border-dashed theme-border rounded-full flex items-center justify-center">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                <div
+                    class="w-10 h-10 mb-4 border border-dashed theme-border rounded-full flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z">
+                        </path>
+                    </svg>
                 </div>
-                <p class="text-[9px] font-bold uppercase tracking-[0.4em]">Engine Standby</p>
+                <p class="text-[9px] font-bold uppercase tracking-[0.4em]">Assistance Standby</p>
             </div>
         </div>
 
         <!-- Conversational Input Hub -->
-        <div class="mt-auto border-t theme-border bg-white dark:bg-gray-900 shrink-0 z-20">
-            <div class="relative group max-w-3xl mx-auto w-full">
-                <!-- Search Icon -->
-                <div class="absolute inset-y-0 left-5 flex items-center pointer-events-none z-30">
-                    <svg class="w-3.5 h-3.5 text-gray-400 group-focus-within:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                </div>
-                
-                <!-- Precision Switch -->
-                <div class="absolute inset-y-0 left-12 flex items-center z-30">
-                    <div class="bg-gray-100/50 dark:bg-gray-800/50 p-0.5 rounded-lg flex items-center gap-0.5 border theme-border backdrop-blur-sm">
-                        <button id="mode-local" onclick="setMode('local')" 
-                                class="px-2 py-1 rounded-md text-[7px] font-bold uppercase tracking-widest transition-all bg-blue-600 text-white shadow-sm">
-                            ARC
-                        </button>
-                        <button id="mode-global" onclick="setMode('global')" 
-                                class="px-2 py-1 rounded-md text-[7px] font-bold uppercase tracking-widest transition-all theme-text opacity-40 hover:opacity-100">
-                            GLO
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Ultra-Compact Fixed Workspace -->
-                <textarea id="stream-query" 
-                       class="w-full pl-36 pr-16 py-2 theme-bg theme-text text-sm border-none outline-none focus:ring-0 placeholder:theme-text placeholder:opacity-20 font-medium resize-none overflow-y-auto custom-scrollbar"
-                       style="height: 36px; min-height: 36px;"
-                       placeholder="Type command..." 
-                       autocomplete="off"
-                       onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); executeStreamSearch(); }"></textarea>
-                
-                <!-- Neural Pulsar Button -->
-                <div class="absolute right-5 inset-y-0 flex items-center">
-                    <button id="exec-btn" onclick="handlePulsarClick()" 
-                            class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 active:scale-90 transition-all shadow-lg">
-                        <div id="exec-icon-send">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                        </div>
-                        <div id="exec-icon-stop" class="hidden">
-                            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><rect width="14" height="14" x="5" y="5" rx="2"></rect></svg>
-                        </div>
-                    </button>
-                </div>
-            </div>
-        </div>
+        {% include 'components/assistance_input.html' %}
     </div>
 
     <!-- Right Sidebar -->
-    <div class="w-80 flex flex-col bg-white dark:bg-gray-900 shrink-0 overflow-y-auto custom-scrollbar border-l theme-border">
+    <div
+        class="w-80 flex flex-col bg-white dark:bg-gray-900 shrink-0 overflow-y-auto custom-scrollbar border-l theme-border">
         <header class="h-12 px-6 border-b theme-border flex items-center shrink-0">
             <h2 class="text-[9px] font-bold theme-text uppercase tracking-[0.2em]">Forensic Inspector</h2>
         </header>
@@ -80,13 +44,52 @@
 
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <style>
-    .message-bubble { animation: messageSlide 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
-    @keyframes messageSlide { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    .markdown-body { font-size: 13px; line-height: 1.6; text-align: left; }
-    .markdown-body p { margin-bottom: 1em; }
-    .markdown-body strong { font-weight: 600; color: #2563eb; }
-    .typing-dot { animation: typingPulse 1.4s infinite; }
-    @keyframes typingPulse { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
+    .message-bubble {
+        animation: messageSlide 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    @keyframes messageSlide {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .markdown-body {
+        font-size: 13px;
+        line-height: 1.6;
+        text-align: left;
+    }
+
+    .markdown-body p {
+        margin-bottom: 1em;
+    }
+
+    .markdown-body strong {
+        font-weight: 600;
+        color: #2563eb;
+    }
+
+    .typing-dot {
+        animation: typingPulse 1.4s infinite;
+    }
+
+    @keyframes typingPulse {
+
+        0%,
+        100% {
+            opacity: 0.2;
+        }
+
+        50% {
+            opacity: 1;
+        }
+    }
 </style>
 
 <script src="/static/js/chat_logic.js"></script>

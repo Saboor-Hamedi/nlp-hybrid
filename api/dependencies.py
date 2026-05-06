@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 from db.Database import Database
 from fastapi.templating import Jinja2Templates
 

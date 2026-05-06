@@ -19,7 +19,7 @@
     <script src="/static/js/insert.js"></script>
     <script src="/static/js/edit.js"></script>
 
-    <title>{% block title %}Signal Forensic Suite{% endblock %}</title>
+    <title>{% block title %}Signal Assistance{% endblock %}</title>
 </head>
 <body class="flex h-screen overflow-hidden">
     
@@ -51,7 +51,7 @@
                 <button id="trigger-search" class="w-full max-w-md flex items-center justify-between gap-3 px-4 py-2 theme-bg-sec border theme-border rounded-xl hover:shadow-sm transition-all group">
                     <div class="flex items-center gap-3">
                         <svg class="w-4 h-4 theme-text-sec opacity-40 group-hover:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                        <span class="text-xs theme-text-sec opacity-60">Search forensic archive...</span>
+                        <span class="text-xs theme-text-sec opacity-60">Search archive...</span>
                     </div>
                     <div class="flex items-center gap-1.5 px-1.5 py-1 rounded bg-white theme-bg border theme-border">
                         <span class="text-[9px] font-bold theme-text-sec opacity-40">⌃ K</span>
@@ -116,5 +116,6 @@
             if(link.getAttribute('href') === currentPath) link.classList.add('active');
         });
     </script>
+    {% block scripts %}{% endblock %}
 </body>
 </html>

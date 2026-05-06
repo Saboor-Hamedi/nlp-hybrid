@@ -1,5 +1,6 @@
 {% extends 'layouts/base.html' %}
 
+
 {% block title %} Search Analysis - Neural Forensic Suite {% endblock %}
 
 {% block content %}
@@ -8,12 +9,15 @@
     <div>
         <h1 class="text-sm font-bold text-gray-900 uppercase tracking-widest mb-2">Search Analysis</h1>
         <p class="text-xs text-gray-500">
-            Correlation identified {{ results|length }} matches for 
+            Correlation identified {{ results|length }} matches for
             <span class="text-blue-600 font-bold">"{{ query }}"</span>
         </p>
     </div>
-    <button onclick="openEditor()" class="px-4 py-2 bg-blue-600 text-white text-[10px] font-bold rounded-lg uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 flex items-center gap-2">
-        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+    <button onclick="openEditor()"
+        class="px-4 py-2 bg-blue-600 text-white text-[10px] font-bold rounded-lg uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 flex items-center gap-2">
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg>
         New Correlation
     </button>
 </div>
@@ -41,21 +45,28 @@
                         <td class="px-4 py-4 w-40 border-r theme-border bg-purple-500/5">
                             <div class="flex flex-col gap-1">
                                 <div class="flex items-center justify-between">
-                                    <span class="text-[10px] font-bold theme-text uppercase tracking-widest">Theme #{{ id + 1 }}</span>
-                                    <span class="text-[8px] font-bold text-purple-500 bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/20">
-                                        {{ "%.2f"|format(lda_coherence[id]) if lda_coherence and id in lda_coherence else "0.00" }}
+                                    <span class="text-[10px] font-bold theme-text uppercase tracking-widest">Theme #{{
+                                        id + 1 }}</span>
+                                    <span
+                                        class="text-[8px] font-bold text-purple-500 bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/20">
+                                        {{ "%.2f"|format(lda_coherence[id]) if lda_coherence and id in lda_coherence
+                                        else "0.00" }}
                                     </span>
                                 </div>
-                                <span class="text-[7px] font-bold theme-text-sec opacity-40 uppercase tracking-tighter">Forensic Coherence</span>
+                                <span
+                                    class="text-[7px] font-bold theme-text-sec opacity-40 uppercase tracking-tighter">Forensic
+                                    Coherence</span>
                             </div>
                         </td>
                         <td class="px-4 py-3">
                             <div class="flex flex-wrap gap-1">
                                 {% for segment in words.split(' + ') %}
                                 {% set parts = segment.split('*') %}
-                                <span class="text-[8px] bg-purple-500/10 text-purple-600 dark:text-purple-300 px-1.5 py-0.5 rounded border border-purple-500/10 font-medium">
-                                    {{ parts[1]|replace('"', '') if parts|length > 1 else parts[0] }} 
-                                    <span class="text-purple-400/80 ml-1 font-bold">({{ parts[0] if parts|length > 1 else "" }})</span>
+                                <span
+                                    class="text-[8px] bg-purple-500/10 text-purple-600 dark:text-purple-300 px-1.5 py-0.5 rounded border border-purple-500/10 font-medium">
+                                    {{ parts[1]|replace('"', '') if parts|length > 1 else parts[0] }}
+                                    <span class="text-purple-400/80 ml-1 font-bold">({{ parts[0] if parts|length > 1
+                                        else "" }})</span>
                                 </span>
                                 {% endfor %}
                             </div>
@@ -77,11 +88,14 @@
                 <tbody class="divide-y theme-border">
                     {% for id, words in bert_topics %}
                     <tr class="hover:bg-gray-50/5 transition-colors">
-                        <td class="px-4 py-3 w-16 text-[9px] font-bold theme-text-sec uppercase tracking-widest">#{{ id + 1 }}</td>
+                        <td class="px-4 py-3 w-16 text-[9px] font-bold theme-text-sec uppercase tracking-widest">#{{ id
+                            + 1 }}</td>
                         <td class="px-4 py-3">
                             <div class="flex flex-wrap gap-1">
                                 {% for word in words.split(', ') %}
-                                <span class="text-[8px] bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 px-1.5 py-0.5 rounded border border-indigo-500/10">{{ word }}</span>
+                                <span
+                                    class="text-[8px] bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 px-1.5 py-0.5 rounded border border-indigo-500/10">{{
+                                    word }}</span>
                                 {% endfor %}
                             </div>
                         </td>
@@ -96,20 +110,26 @@
         <div class="bg-blue-600/5 border border-blue-500/10 rounded-2xl overflow-hidden shadow-sm">
             <div class="px-6 py-3 border-b border-blue-500/10 flex items-center justify-between bg-blue-600/5">
                 <div class="flex items-center gap-3">
-                    <div class="w-2 h-2 bg-blue-600 rounded-full animate-pulse shadow-[0_0_8px_rgba(37,99,235,0.4)]"></div>
-                    <h3 class="text-[9px] font-bold theme-text uppercase tracking-[0.2em] opacity-60">Neural Synthesis Briefing</h3>
+                    <div class="w-2 h-2 bg-blue-600 rounded-full animate-pulse shadow-[0_0_8px_rgba(37,99,235,0.4)]">
+                    </div>
+                    <h3 class="text-[9px] font-bold theme-text uppercase tracking-[0.2em] opacity-60">Assistance
+                        Briefing</h3>
                 </div>
                 <div class="flex items-center gap-2">
-                    <span id="synthesis-status" class="text-[8px] font-bold text-blue-600 uppercase tracking-widest opacity-60 italic">Synchronizing context...</span>
+                    <span id="synthesis-status"
+                        class="text-[8px] font-bold text-blue-600 uppercase tracking-widest opacity-60 italic">Synchronizing
+                        context...</span>
                 </div>
             </div>
             <div class="p-8">
-                <div id="synthesis-content" class="theme-text text-[13px] leading-relaxed font-light whitespace-pre-wrap opacity-80">
+                <div id="synthesis-content"
+                    class="theme-text text-[13px] leading-relaxed font-light whitespace-pre-wrap opacity-80">
                     <!-- Synthesized content flows here -->
                 </div>
             </div>
             <div class="px-6 py-2 bg-blue-600/5 border-t border-blue-500/10 flex items-center justify-between">
-                <span class="text-[8px] font-bold theme-text-sec opacity-40 uppercase tracking-widest">Model: DeepSeek-Chat / High-Fidelity Mode</span>
+                <span class="text-[8px] font-bold theme-text-sec opacity-40 uppercase tracking-widest">Model: Assistance
+                    / High-Fidelity</span>
                 <span class="text-[8px] font-bold text-blue-600/60 uppercase tracking-widest">Grounding Active</span>
             </div>
         </div>
@@ -117,8 +137,9 @@
 
     <!-- Search Metadata -->
     <div class="mb-12 border-l-2 theme-border pl-6">
-    <h2 class="text-[10px] font-bold theme-text-sec uppercase tracking-widest opacity-40">Document Correlation Stream</h2>
-</div>
+        <h2 class="text-[10px] font-bold theme-text-sec uppercase tracking-widest opacity-40">Document Correlation
+            Stream</h2>
+    </div>
 </div>
 
 {% block scripts %}
@@ -128,108 +149,144 @@
         const panel = document.getElementById('synthesis-panel');
         const content = document.getElementById('synthesis-content');
         const status = document.getElementById('synthesis-status');
-        
+
         try {
             panel.classList.remove('hidden');
-            
+
             // Gather result context for RAG
             const resultsContext = [];
             {% for result in results %}
             resultsContext.push({
                 id: {{ result.id }},
-                content: `{{ result.content|replace('"', '\"')|replace('\n', ' ') }}`
-            });
-            {% endfor %}
+        content: `{{ result.content|replace('"', '\"')|replace('\n', ' ') }}`
+    });
+    {% endfor %}
 
-            const response = await fetch('/api/synthesis', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ 
-                    query: "{{ query }}", 
-                    context_docs: resultsContext 
-                })
-            });
-            const data = await response.json();
-            content.innerText = data.synthesis;
-            status.innerText = 'Synthesis Complete';
+    const response = await fetch('/api/synthesis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            query: "{{ query }}",
+            context_docs: resultsContext
+        })
+    });
+    const data = await response.json();
+    content.innerText = data.synthesis;
+    status.innerText = 'Synthesis Complete';
         } catch (e) {
-            console.error('Synthesis Error:', e);
-            status.innerText = 'Synthesis Failed';
-        }
+        console.error('Synthesis Error:', e);
+        status.innerText = 'Synthesis Failed';
+    }
     });
 </script>
 {% endblock %}
 
 <div class="space-y-4">
     {% for result in results %}
-    <div class="theme-bg p-7 rounded-xl border theme-border hover:border-blue-500 transition-all duration-200 group" data-doc-id="{{ result.id }}">
+    <div class="theme-bg p-7 rounded-xl border theme-border hover:border-blue-500 transition-all duration-200 group"
+        data-doc-id="{{ result.id }}">
         <div class="flex items-start justify-between gap-6">
             <div class="flex-1">
                 <div class="flex items-center flex-wrap gap-3 mb-4">
-                    <span class="text-[9px] font-bold theme-text-sec opacity-60 uppercase tracking-widest bg-gray-50/10 px-2 py-0.5 rounded border theme-border">DOC #{{ result.id }}</span>
-                    <span class="text-[9px] font-bold text-green-600 bg-green-50/10 px-2 py-0.5 rounded uppercase tracking-widest border border-green-100/30">Score: {{ "%.2f"|format(result.relevance_score) }}</span>
-                    <span class="text-[9px] font-bold text-purple-600 dark:text-purple-300 bg-purple-50 dark:bg-purple-900/30 px-2 py-0.5 rounded uppercase tracking-widest border border-purple-100/50 dark:border-purple-500/20">{{ result.lda_topic_label }}</span>
-                    <span class="text-[9px] font-bold text-indigo-600 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-0.5 rounded uppercase tracking-widest border border-indigo-100/50 dark:border-indigo-500/20">{{ result.bert_topic_label }}</span>
+                    <span
+                        class="text-[9px] font-bold theme-text-sec opacity-60 uppercase tracking-widest bg-gray-50/10 px-2 py-0.5 rounded border theme-border">DOC
+                        #{{ result.id }}</span>
+                    <span
+                        class="text-[9px] font-bold text-green-600 bg-green-50/10 px-2 py-0.5 rounded uppercase tracking-widest border border-green-100/30">Score:
+                        {{ "%.2f"|format(result.relevance_score) }}</span>
+                    <span
+                        class="text-[9px] font-bold text-purple-600 dark:text-purple-300 bg-purple-50 dark:bg-purple-900/30 px-2 py-0.5 rounded uppercase tracking-widest border border-purple-100/50 dark:border-purple-500/20">{{
+                        result.lda_topic_label }}</span>
+                    <span
+                        class="text-[9px] font-bold text-indigo-600 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-0.5 rounded uppercase tracking-widest border border-indigo-100/50 dark:border-indigo-500/20">{{
+                        result.bert_topic_label }}</span>
                 </div>
-                
-                <h2 class="theme-text font-bold text-base mb-3 leading-snug group-hover:text-blue-600 transition-colors">{{ result.content[:140] }}...</h2>
-                
-                <p id="doc-content-{{ result.id }}" class="theme-text-sec text-xs leading-relaxed mb-4 font-light line-clamp-2 opacity-70">
+
+                <h2
+                    class="theme-text font-bold text-base mb-3 leading-snug group-hover:text-blue-600 transition-colors">
+                    {{ result.content[:140] }}...</h2>
+
+                <p id="doc-content-{{ result.id }}"
+                    class="theme-text-sec text-xs leading-relaxed mb-4 font-light line-clamp-2 opacity-70">
                     {{ result.content }}
                 </p>
 
                 <!-- Forensic Action Row -->
                 <div class="flex items-center gap-2 pt-4 mt-auto border-t theme-border">
-                    <a href="/show/{{ result.id }}" 
-                            class="w-fit px-4 py-1.5 bg-blue-600/10 text-blue-600 rounded-lg text-[9px] font-bold uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all text-center">
+                    <a href="/show/{{ result.id }}"
+                        class="w-fit px-4 py-1.5 bg-blue-600/10 text-blue-600 rounded-lg text-[9px] font-bold uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all text-center">
                         Details
                     </a>
-                    <button onclick="openEditor({{ result.id }}, document.getElementById('doc-content-{{ result.id }}').innerText)" 
-                            class="p-1.5 theme-text-sec opacity-40 hover:opacity-100 hover:text-blue-600 transition-all" title="Refine">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                    <button
+                        onclick="openEditor({{ result.id }}, document.getElementById('doc-content-{{ result.id }}').innerText)"
+                        class="p-1.5 theme-text-sec opacity-40 hover:opacity-100 hover:text-blue-600 transition-all"
+                        title="Refine">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                            </path>
+                        </svg>
                     </button>
-                    <button onclick="deleteDocument({{ result.id }})" 
-                            class="p-1.5 theme-text-sec opacity-40 hover:opacity-100 hover:text-red-500 transition-all" title="Purge">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    <button onclick="deleteDocument({{ result.id }})"
+                        class="p-1.5 theme-text-sec opacity-40 hover:opacity-100 hover:text-red-500 transition-all"
+                        title="Purge">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                            </path>
+                        </svg>
                     </button>
                 </div>
 
                 <!-- Signal Correlation Matrix -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 border-l-2 theme-border pl-5">
                     <div>
-                        <p class="text-[9px] font-bold text-purple-500 uppercase tracking-widest mb-2">LDA Probabilistic</p>
+                        <p class="text-[9px] font-bold text-purple-500 uppercase tracking-widest mb-2">LDA Probabilistic
+                        </p>
                         <div class="flex flex-wrap gap-1">
                             {% for keyword, weight in result.lda_keywords.items() %}
-                            <span class="text-[9px] bg-purple-500/10 text-purple-600 dark:text-purple-300 px-2 py-0.5 rounded border border-purple-500/10 font-medium">
-                                {{ keyword }} <span class="opacity-50 text-[8px] ml-0.5">{{ "%.2f"|format(weight) if weight != 1.0 else "" }}</span>
+                            <span
+                                class="text-[9px] bg-purple-500/10 text-purple-600 dark:text-purple-300 px-2 py-0.5 rounded border border-purple-500/10 font-medium">
+                                {{ keyword }} <span class="opacity-50 text-[8px] ml-0.5">{{ "%.2f"|format(weight) if
+                                    weight != 1.0 else "" }}</span>
                             </span>
                             {% endfor %}
                         </div>
                     </div>
                     <div>
-                        <p class="text-[9px] font-bold text-indigo-500 uppercase tracking-widest mb-2">BERT Contextual</p>
+                        <p class="text-[9px] font-bold text-indigo-500 uppercase tracking-widest mb-2">BERT Contextual
+                        </p>
                         <div class="flex flex-wrap gap-1">
                             {% for keyword in result.bert_keywords %}
-                            <span class="text-[9px] bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 px-2 py-0.5 rounded border border-indigo-500/10 font-medium">
+                            <span
+                                class="text-[9px] bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 px-2 py-0.5 rounded border border-indigo-500/10 font-medium">
                                 {{ keyword }}
                             </span>
                             {% endfor %}
                         </div>
                     </div>
                 </div>
-                
-                <div class="flex items-center gap-4 text-[9px] font-bold theme-text-sec opacity-40 uppercase tracking-widest">
+
+                <div
+                    class="flex items-center gap-4 text-[9px] font-bold theme-text-sec opacity-40 uppercase tracking-widest">
                     <span class="flex items-center gap-1.5">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"></path></svg>
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129">
+                            </path>
+                        </svg>
                         {{ result.language }}
                     </span>
                     <span class="flex items-center gap-1.5">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
                         {{ result.created_at }}
                     </span>
                 </div>
             </div>
-            
+
             <div class="flex flex-col items-end gap-3">
                 <!-- Actions moved under content -->
             </div>
@@ -240,7 +297,8 @@
 
 {% elif query %}
 <div class="text-center py-20 theme-bg rounded-xl border theme-border">
-    <p class="text-[10px] font-bold theme-text-sec opacity-50 uppercase tracking-widest">No active correlations found.</p>
+    <p class="text-[10px] font-bold theme-text-sec opacity-50 uppercase tracking-widest">No active correlations found.
+    </p>
 </div>
 {% endif %}
 
