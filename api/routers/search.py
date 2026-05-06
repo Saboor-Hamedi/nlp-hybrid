@@ -5,7 +5,7 @@ from fastapi.responses import HTMLResponse
 
 from api.dependencies import get_async_db, get_nlp_model, templates
 from api.helpers import parse_lda_keywords, parse_bert_keywords
-from hybrid.async_hybrid_search import search_hybrid_async
+from hybrid.RAGHeart import RAGHeart
 from utils.analytics.topic_modeling import get_topics, predict_topic
 from utils.analytics.bert_topic import get_bert_topics, predict_bert_topic
 
@@ -20,7 +20,8 @@ async def quick_search(
     model = Depends(get_nlp_model)
 ):
     """Instant search endpoint for the command palette with thematic context."""
-    results, _ = await search_hybrid_async(query, conn, model, top_k=5)
+    heart = RAGHeart(conn, model)
+    results, _ = await heart.search(query, top_k=5)
     
     # Fast-track Topic Analysis for the top 5
     training_data = [r[1] for r in results]
@@ -108,8 +109,9 @@ async def search(
             "error": f"Validation Error: {str(e)}"
         })
         
-    # Execute Async Hybrid Search
-    results, stats = await search_hybrid_async(q, conn, model)
+    # Execute Async Hybrid Search via RAGHeart
+    heart = RAGHeart(conn, model)
+    results, stats = await heart.search(q)
     
     # Contextual Topic Discovery on search results
     training_data = [r[1] for r in results]
@@ -206,7 +208,8 @@ async def api_search(
     """
     Pure JSON Retrieval: Optimized for the RAG Chat Engine.
     """
-    results, _ = await search_hybrid_async(query, conn, model)
+    heart = RAGHeart(conn, model)
+    results, _ = await heart.search(query)
     
     # Quick thematic discovery
     training_data = [r[1] for r in results]

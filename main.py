@@ -1,5 +1,5 @@
 import logging
-from db.db_connection import db_connection, get_model
+from db.Database import Database
 from utils.ColorScheme import ColorScheme
 from utils.menu import safe_input
 from utils.cli_handlers import (
@@ -13,7 +13,7 @@ def main():
     logging.basicConfig(filename='activity.log', level=logging.INFO)
     
     with console.status("[bold green]Initializing AI Engine..."):
-        model = get_model()
+        model = Database.get_model()
     
     if not model: return
 
@@ -24,8 +24,8 @@ def main():
         if choice == "q": break
         if not choice: continue
 
-        # Database Context Management
-        conn = db_connection()
+        # Database Context Management (Legacy CLI Connection)
+        conn = Database.get_legacy_connection()
         if not conn: continue
         cursor = conn.cursor()
 

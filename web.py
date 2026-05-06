@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 from api.routers import home, search, topics, modeling
-from db.db_connection import get_db_pool
+from db.Database import Database
 from api.dependencies import templates
 
 # Initialize Core API
@@ -56,7 +56,7 @@ from db.operations.AsyncDocumentManager import AsyncDocumentManager
 @app.on_event("startup")
 async def startup_event():
     """Verify database connectivity and initialize forensic logic."""
-    pool = await get_db_pool()
+    pool = await Database.get_pool()
     async with pool.acquire() as conn:
         # Initialize the Modular Forensic Engine
         manager = AsyncDocumentManager(conn, None) # No model needed for SQL init
@@ -66,7 +66,7 @@ async def startup_event():
 @app.on_event("shutdown")
 async def shutdown_event():
     """Gracefully release database resources."""
-    pool = await get_db_pool()
+    pool = await Database.get_pool()
     if pool:
         await pool.close()
         print("🛑 Async database pool released.")
