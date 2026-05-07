@@ -28,18 +28,8 @@
         {% include 'components/assistance_input.html' %}
     </div>
 
-    <!-- Right Sidebar: Forensic Inspector -->
-    <div
-        class="w-80 flex flex-col bg-gray-50/50 dark:bg-gray-900/50 shrink-0 overflow-y-auto custom-scrollbar border-l theme-border">
-        <header class="h-12 px-6 border-b theme-border flex items-center shrink-0">
-            <h2 class="text-[9px] font-bold theme-text uppercase tracking-[0.2em]">Forensic Inspector</h2>
-        </header>
-        <div id="inspector-content" class="p-6 space-y-8">
-            <div class="flex flex-col items-center justify-center h-64 opacity-20 text-center">
-                <p class="text-[9px] font-bold uppercase tracking-widest">Select segment for<br>deep analytics</p>
-            </div>
-        </div>
-    </div>
+    <!-- Forensic Inspector: Real-time Analytics Sidebar -->
+    {% include "components/forensic_inspector.html" %}
 </div>
 
 <!-- Modal Layers -->
@@ -95,6 +85,7 @@
     }
 </style>
 
+<script src="/static/js/forensic_analytics.js"></script>
 <script src="/static/js/chat_logic.js"></script>
 
 

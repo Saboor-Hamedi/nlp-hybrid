@@ -1,0 +1,22 @@
+<!-- Forensic Inspector Sidebar -->
+<aside id="right-sidebar" class="w-80 border-l theme-border bg-white theme-bg hidden lg:flex flex-col shrink-0">
+    <header class="h-10 px-4 border-b theme-border flex items-center justify-between bg-gray-50/5 shrink-0">
+        <p class="text-[8px] font-bold theme-text uppercase tracking-[0.2em] opacity-40">Forensic Inspector</p>
+        <div class="flex items-center gap-1.5">
+            <div class="w-1 h-1 rounded-full bg-green-500"></div>
+            <span class="text-[7px] font-bold text-green-600 uppercase tracking-widest">Active Engine</span>
+        </div>
+    </header>
+
+    <div id="inspector-content" class="p-6 space-y-8 overflow-y-auto custom-scrollbar">
+        <!-- Initial State: Prompts user to start research -->
+        <div class="flex flex-col items-center justify-center h-64 opacity-20 text-center">
+            <div class="w-10 h-10 border-2 border-dashed theme-border rounded-full flex items-center justify-center mb-4">
+                <svg class="w-4 h-4 theme-text" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+            </div>
+            <p class="text-[9px] font-bold uppercase tracking-widest">Execute Query to Begin<br>Forensic Inspection</p>
+        </div>
+    </div>
+</aside>
