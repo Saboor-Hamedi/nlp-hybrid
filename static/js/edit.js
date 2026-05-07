@@ -23,7 +23,6 @@ window.openEditor = function(docId = null, existingContent = '') {
     if (submitBtn) submitBtn.innerText = docId ? 'Edit' : 'Archive';
     
     contentArea.value = existingContent;
-    
     toggleEditor();
 };
 
@@ -40,40 +39,51 @@ window.performUpdate = async function(docId) {
         });
 
         if (response.ok) {
-            showToast('Document updated', 'success');
+            showToast('Registry Updated', 'success');
             toggleEditor();
 
-            // Surgical DOM Update
-            console.log(`[Neural Forge] Refinement complete for #${docId}. Syncing UI...`);
+            // 🚀 NUCLEAR SYNC ENGINE
+            console.group(`[Neural Sync] Record #${docId}`);
             
-            // 1. Update snippets
-            const snippets = document.querySelectorAll(`.forensic-snippet-sync-${docId}`);
-            snippets.forEach(el => {
-                el.innerText = content;
-                el.classList.add('text-blue-500', 'font-bold');
-                setTimeout(() => el.classList.remove('text-blue-500', 'font-bold'), 2000);
+            const possibleSelectors = [
+                `[data-forensic-id="${docId}"]`,
+                `#forensic-card-${docId}`,
+                `#card-${docId}`
+            ];
+            
+            let foundCount = 0;
+            possibleSelectors.forEach(sel => {
+                const targets = document.querySelectorAll(sel);
+                targets.forEach(target => {
+                    foundCount++;
+                    const body = target.querySelector('.forensic-content-body') || 
+                                 target.querySelector('.markdown-body') || 
+                                 target;
+                                 
+                    if (typeof marked !== 'undefined') {
+                        body.innerHTML = marked.parse(content);
+                    } else {
+                        body.innerText = content;
+                    }
+                    target.classList.add('ring-4', 'ring-blue-600', 'bg-blue-600/10', 'animate-pulse');
+                    setTimeout(() => target.classList.remove('ring-4', 'ring-blue-600', 'bg-blue-600/10', 'animate-pulse'), 4000);
+                });
             });
 
-            // 2. Update card containers (flash effect)
-            const cards = document.querySelectorAll(`[id="forensic-card-${docId}"]`);
-            cards.forEach(card => {
-                card.classList.add('border-blue-500', 'ring-4', 'ring-blue-500/20');
-                setTimeout(() => card.classList.remove('border-blue-500', 'ring-4', 'ring-blue-500/20'), 2000);
-            });
-
-            // 3. Update main search content
-            const mainContent = document.getElementById(`doc-content-${docId}`);
-            if (mainContent) {
-                mainContent.innerText = content;
-                mainContent.classList.add('text-blue-500');
-                setTimeout(() => mainContent.classList.remove('text-blue-500'), 2000);
+            console.groupEnd();
+            
+            // Auto-refresh the inspector if it matches the current doc
+            const inspectorTitle = document.getElementById('inspector-content')?.innerText;
+            if (inspectorTitle && inspectorTitle.includes(`#${docId}`)) {
+                if (window.inspectDocument) window.inspectDocument(docId);
             }
+            
         } else {
             const err = await response.json();
             showToast(err.detail || 'Update failed', 'error');
         }
     } catch (error) {
-        showToast('Network error during refinement', 'error');
+        showToast('Network error during sync', 'error');
         console.error(error);
     }
 };
@@ -89,91 +99,30 @@ window.refineCurrentContent = async function() {
     const activity = document.getElementById('neuralActivity');
     const hint = document.getElementById('neuralPromptHint');
 
-    if (!rawText.trim() && !prompt.trim()) return showToast('Neural Engine: Instruction or context required.', 'info');
+    if (!rawText.trim() && !prompt.trim()) return showToast('Instruction required.', 'info');
 
-    // Enter Neural Loading State
     if (activity) activity.classList.remove('hidden');
     if (hint) hint.classList.add('hidden');
     promptInput.disabled = true;
     editor.classList.add('ghost-shimmer', 'opacity-50');
-    const originalPlaceholder = editor.placeholder;
-    editor.placeholder = " [ NEURAL SYNTHESIS IN PROGRESS... ]";
 
     try {
         const response = await fetch('/api/refine', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ 
-                text: rawText,
-                prompt: prompt 
-            })
+            body: JSON.stringify({ text: rawText, prompt: prompt })
         });
 
         if (!response.ok) throw new Error('Neural refinement failed');
-        
         const data = await response.json();
-        const refined = data.refined_text;
-        
-        // Exit Neural Loading State
-        if (activity) activity.classList.add('hidden');
-        if (hint) hint.classList.remove('hidden');
-        promptInput.disabled = false;
-        editor.classList.remove('ghost-shimmer', 'opacity-50');
-        editor.placeholder = originalPlaceholder;
-        
-        // Absolute DOM Override Sequence
-        setTimeout(() => {
-            try {
-                const targets = document.querySelectorAll('#editorContent');
-                targets.forEach(el => {
-                    // Simple, robust override for blank canvas generation
-                    if (!el.value.trim()) {
-                        el.value = refined;
-                    } else {
-                        // Surgical range replacement for existing content
-                        el.setSelectionRange(0, el.value.length);
-                        el.setRangeText(refined, 0, el.value.length, 'end');
-                    }
-                    
-                    el.dispatchEvent(new Event('input', { bubbles: true }));
-                    el.dispatchEvent(new Event('change', { bubbles: true }));
-
-                    el.classList.add('ring-4', 'ring-blue-500/30', 'border-blue-500');
-                    setTimeout(() => el.classList.remove('ring-4', 'ring-blue-500/30', 'border-blue-500'), 1000);
-                });
-
-                promptInput.value = '';
-            } catch (err) {
-                console.error('Refinement Injection Error:', err);
-                editor.value = refined;
-            }
-        }, 150);
+        editor.value = data.refined_text;
+        promptInput.value = '';
     } catch (error) {
-        // Emergency Reset on Failure
+        showToast(error.message, 'error');
+    } finally {
         if (activity) activity.classList.add('hidden');
         if (hint) hint.classList.remove('hidden');
         promptInput.disabled = false;
         editor.classList.remove('ghost-shimmer', 'opacity-50');
-        
-        showToast(error.message, 'error');
     }
 };
-
-// Escape Key Listener for Modals
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-        const editor = document.getElementById('editorModal');
-        const viewer = document.getElementById('viewer-modal');
-        
-        if (editor && !editor.classList.contains('hidden')) {
-            window.toggleEditor();
-        }
-        if (viewer && !viewer.classList.contains('hidden')) {
-            if (window.toggleViewer) window.toggleViewer();
-            else {
-                viewer.classList.add('hidden');
-                viewer.classList.remove('flex');
-            }
-        }
-    }
-});

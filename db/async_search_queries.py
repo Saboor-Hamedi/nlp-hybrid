@@ -52,6 +52,7 @@ async def execute_async_bm25_query(query, conn, top_k):
                    d.language, d.created_at
             FROM document d
             WHERE to_tsvector('english', d.content) @@ plainto_tsquery('english', $1)
+              AND ts_rank(to_tsvector('english', d.content), plainto_tsquery('english', $1)) > 0.1
             ORDER BY rank DESC
             LIMIT $2
         """

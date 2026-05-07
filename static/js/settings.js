@@ -97,21 +97,26 @@
     
     window.isRagEnabled = assistanceSaved.rag_enabled;
     window.ragResultDensity = assistanceSaved.result_density || 3;
+    window.ragThreshold = 0.015; // Balanced Default
 
     window.updateAssistantConfig = function() {
         const toggle = document.getElementById('toggle-rag-engine');
         const densityInput = document.getElementById('rag-result-density');
+        const thresholdInput = document.getElementById('rag-threshold-slider');
         
         const isEnabled = toggle ? toggle.checked : false;
         const density = densityInput ? parseInt(densityInput.value) : 3;
+        const threshold = thresholdInput ? (parseFloat(thresholdInput.value) / 2000) : 0.015;
         
         window.isRagEnabled = isEnabled;
         window.ragResultDensity = density;
+        window.ragThreshold = threshold;
         
         // Save to persistence
         localStorage.setItem('assistance_config', JSON.stringify({
             rag_enabled: isEnabled,
-            result_density: density
+            result_density: density,
+            rag_threshold: threshold
         }));
     };
     

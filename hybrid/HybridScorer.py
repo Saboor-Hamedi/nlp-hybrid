@@ -89,7 +89,15 @@ class HybridScorer:
             s_norm = sem_map.get(doc_id, 0.0)
             b_norm = bm25_map.get(doc_id, 0.0)
             
-            if strategy == "combsum":
+            if strategy == "rrf":
+                # Reciprocal Rank Fusion Logic
+                k = 60
+                score = 0.0
+                if doc_id in sem_ranks:
+                    score += 1.0 / (k + sem_ranks[doc_id])
+                if doc_id in bm25_ranks:
+                    score += 1.0 / (k + bm25_ranks[doc_id])
+            elif strategy == "combsum":
                 score = s_norm + b_norm
             elif strategy == "combmnz":
                 count = (1 if s_norm > 1e-6 else 0) + (1 if b_norm > 1e-6 else 0)

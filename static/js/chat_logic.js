@@ -50,10 +50,11 @@ function revertPulsar() {
   const btn = document.getElementById("exec-btn");
   const sendIcon = document.getElementById("exec-icon-send");
   const stopIcon = document.getElementById("exec-icon-stop");
+  if(!btn) return;
   btn.classList.add(currentMode === "local" ? "bg-blue-600" : "bg-purple-600");
   btn.classList.remove("bg-gray-800");
-  sendIcon.classList.remove("hidden");
-  stopIcon.classList.add("hidden");
+  if(sendIcon) sendIcon.classList.remove("hidden");
+  if(stopIcon) stopIcon.classList.add("hidden");
 }
 
 async function executeStreamSearch() {
@@ -70,17 +71,17 @@ async function executeStreamSearch() {
 
   // User Message
   const userMsg = document.createElement("div");
-  userMsg.className = "flex flex-col items-end w-full message-bubble";
+  userMsg.className = "flex flex-col items-end w-full message-bubble mb-6";
   const colorClass = currentMode === "local" ? "bg-blue-600" : "bg-purple-600";
   userMsg.innerHTML = `
-        <div class="${colorClass} text-white p-4 rounded-2xl rounded-tr-none max-w-[80%] text-left">
+        <div class="${colorClass} text-white p-4 rounded-2xl rounded-tr-none max-w-[80%] text-left shadow-sm">
             <p class="text-[13px] font-medium leading-relaxed">${query}</p>
         </div>
         <span class="text-[8px] font-bold theme-text-sec opacity-30 uppercase tracking-widest mt-1 mr-1">${currentMode === "local" ? "Forensic Researcher" : "Global Analyst"}</span>
     `;
   thread.appendChild(userMsg);
   queryInput.value = "";
-  queryInput.style.height = "44px"; // Reset to new expanded height
+  queryInput.style.height = "44px"; 
   thread.scrollTop = thread.scrollHeight;
 
   isGenerating = true;
@@ -93,22 +94,20 @@ async function executeStreamSearch() {
   // AI Message Container
   const aiMsgId = "ai-" + Date.now();
   const aiMsg = document.createElement("div");
-  aiMsg.className = "flex flex-col items-start w-full message-bubble mb-6";
-  const accentColor = currentMode === "local" ? "bg-blue-500" : "bg-purple-500";
-
+  aiMsg.className = "flex flex-col w-full message-bubble mb-10";
+  
   aiMsg.innerHTML = `
-        <div id="${aiMsgId}-evidence" class="hidden mb-6 pb-4 border-b border-dashed theme-border">
-            <div class="flex items-center justify-between mb-3">
+        <div id="${aiMsgId}-evidence" class="hidden w-full mb-8 pb-4 border-b border-dashed theme-border">
+            <div class="flex items-center justify-between mb-4">
                 <p class="text-[7px] font-bold theme-text-sec uppercase tracking-widest opacity-30">Forensic Source Data</p>
                 <div class="h-[1px] flex-1 mx-3 bg-gray-100 dark:bg-gray-800 opacity-20"></div>
             </div>
-            <div id="${aiMsgId}-grid" class="grid grid-cols-1 gap-1"></div>
+            <div id="${aiMsgId}-grid" class="grid grid-cols-1 gap-1 w-full"></div>
         </div>
 
         <div id="${aiMsgId}-content" class="markdown-body leading-relaxed opacity-90 px-1"></div>
 
         <div class="flex items-center gap-2 mt-6 mb-2 ml-1">
-            <div class="w-1 h-1 ${accentColor} rounded-full shadow-[0_0_5px_${accentColor}]"></div>
             <span class="text-[7px] font-bold theme-text-sec uppercase tracking-[0.2em] opacity-40">Assistance</span>
             <span id="${aiMsgId}-status" class="typing-dot text-[7px] font-bold text-blue-600 uppercase tracking-widest ml-3">Thinking...</span>
         </div>
@@ -135,300 +134,135 @@ async function executeStreamSearch() {
 
   try {
     let searchData = { results: [] };
-    if (currentMode === "local") {
-      const limit = window.ragResultDensity || 3;
-      const searchResponse = await fetch(
-        `/api/search?query=${encodeURIComponent(query)}&limit=${limit}`,
-        { signal: abortController.signal },
-      );
-      searchData = await searchResponse.json();
+    const socialQueries = ["hello", "hi", "hey", "who are you", "help", "thanks", "thank you", "good morning", "good afternoon"];
+    const isSocial = socialQueries.includes(query.toLowerCase().replace(/[?!. ]+$/, "").trim());
 
-      if (searchData.intelligence) {
-        ForensicAnalytics.setIntelligence(searchData.intelligence);
-        ForensicAnalytics.renderGlobalIntelligence();
-      }
+    // 1. DATA RETRIEVAL (ALWAYS ATTEMPTED UNLESS SOCIAL)
+    if (!isSocial) {
+      try {
+        const limit = window.ragResultDensity || parseInt(document.getElementById("rag-result-density")?.value || "3");
+        console.log(`%c[Forensic Engine] Initiating retrieval with density: ${limit}`, "color: #2563eb; font-weight: bold;");
+        const searchResponse = await fetch(`/api/search?query=${encodeURIComponent(query)}&limit=${limit}`, { signal: abortController.signal });
+        searchData = await searchResponse.json();
 
-      if (searchData.results.length > 0) {
-        evidence.classList.remove("hidden");
-
-        if (window.isRagEnabled !== true) {
-          const labelEl = aiMsg.querySelector("span.theme-text-sec");
-          if (labelEl) labelEl.innerText = "Forensic Retrieval";
+        if (searchData.intelligence) {
+            ForensicAnalytics.setIntelligence(searchData.intelligence);
+            ForensicAnalytics.renderGlobalIntelligence();
         }
-
-        searchData.results.slice(0, limit).forEach((res) => {
-          const card = document.createElement("div");
-          card.id = `forensic-card-${res.id}`;
-          card.className =
-            "w-full py-4 border-b theme-border last:border-0 group/card relative transition-all cursor-pointer";
-          card.setAttribute("onclick", `inspectDocument('${res.id}')`);
-
-          card.innerHTML = `
-                        <div class="flex items-start gap-4 mb-2">
-                            <div class="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 opacity-40 group-hover/card:opacity-100 group-hover/card:scale-125 transition-all"></div>
-                            <div class="flex-1">
-                                <p class="forensic-snippet-sync-${res.id} text-[12px] theme-text leading-relaxed opacity-80 group-hover/card:opacity-100 transition-opacity">
-                                    ${res.snippet || res.content}
-                                </p>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-center gap-4 mt-3 ml-5">
-                            <div class="flex items-center gap-2">
-                                <span class="text-[7px] font-bold text-blue-600 bg-blue-600/5 px-1.5 py-0.5 rounded border border-blue-600/10 uppercase tracking-tighter">DOC #${res.id}</span>
-                            </div>
-                            
-                            <div class="h-[1px] flex-1 bg-gray-100 dark:bg-gray-800 opacity-20"></div>
-
-                            <div class="flex items-center gap-3">
-                                <button onclick="openReadMore('${res.id}')" 
-                                        class="text-[8px] font-bold text-blue-600 uppercase tracking-widest hover:underline flex items-center gap-1.5">
-                                    <span>Inspect Full Dossier</span>
-                                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                                </button>
-                                
-                                <div class="flex items-center gap-1.5 opacity-40 group-hover/card:opacity-100 transition-opacity ml-2">
-                                    <button onclick="event.stopPropagation(); openForensicEditor('${res.id}')" class="p-1.5 hover:text-blue-600 transition-all" title="Update Record">
-                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-5M18.364 5.636l-3.536 3.536m0 0l-1.06-1.06m1.06 1.06l1.06 1.06m-1.06-1.06l3.536-3.536z"></path></svg>
-                                    </button>
-                                    <button onclick="event.stopPropagation(); purgeForensicRecord('${res.id}')" class="p-1.5 hover:text-red-600 transition-all" title="Delete Record">
-                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-          // Cache thematic and scoring data for this document
-          thematicCache[res.id] = {
-            lda: res.lda_topic_label,
-            bert: res.bert_topic_label,
-            score: res.score,
-            semantic_score: res.semantic_score,
-            bm25_score: res.bm25_score,
-            lda_coherence: res.lda_coherence,
-          };
-
-          grid.appendChild(card);
-        });
-
-        // Auto-Inspect the top result for immediate visibility
-        if (searchData.results.length > 0) {
-          window.inspectDocument(searchData.results[0].id);
-        }
+      } catch (err) {
+        console.warn("Search Retrieval failed or aborted", err);
       }
     }
 
+    // 2. RENDER FORENSIC CARDS
+    if (searchData.results && searchData.results.length > 0) {
+        evidence.classList.remove("hidden");
+        grid.innerHTML = "";
+        searchData.results.forEach((res) => {
+          const card = document.createElement("div");
+          card.id = `forensic-card-${res.id}`;
+          card.className = "w-full py-4 border-b theme-border last:border-0 group/card relative transition-all cursor-pointer";
+          card.setAttribute("onclick", `inspectDocument('${res.id}')`);
+          card.setAttribute("data-forensic-id", res.id);
+
+          card.innerHTML = `
+                <div class="mb-4">
+                    <div class="flex items-center justify-between mb-1">
+                        <h4 class="text-[10px] font-bold theme-text uppercase tracking-widest">${res.smart_title || 'Forensic Dossier'}</h4>
+                        <span class="text-[7px] font-mono theme-text opacity-30">SCORE: ${res.score.toFixed(3)}</span>
+                    </div>
+                    <p class="text-[7px] font-bold text-blue-500 uppercase tracking-[0.2em] opacity-60">${res.smart_subtitle || 'Neural Analysis'}</p>
+                </div>
+                <div class="flex items-start gap-4 mb-2">
+                    <div class="flex-1">
+                        <div id="forensic-content-${res.id}" class="forensic-content-body markdown-body text-[11px] theme-text leading-relaxed opacity-80 group-hover/card:opacity-100 transition-opacity">
+                            ${marked.parse(res.snippet || res.content)}
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4 mt-4 ml-5">
+                    <span class="text-[7px] font-bold text-blue-600 bg-blue-600/5 px-1.5 py-0.5 rounded border border-blue-600/10 uppercase tracking-tighter">DOC #${res.id}</span>
+                    <div class="h-[1px] flex-1 bg-gray-100 dark:bg-gray-800 opacity-20"></div>
+                    <div class="flex items-center gap-1 opacity-30 group-hover/card:opacity-100 transition-opacity ml-2">
+                        <button onclick="event.stopPropagation(); openForensicEditor('${res.id}')" class="p-1.5 hover:text-blue-600 transition-all"><svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-5M18.364 5.636l-3.536 3.536m0 0l-1.06-1.06m1.06 1.06l1.06 1.06m-1.06-1.06l3.536-3.536z"></path></svg></button>
+                        <button onclick="event.stopPropagation(); purgeForensicRecord('${res.id}')" class="p-1.5 hover:text-red-600 transition-all"><svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                    </div>
+                </div>
+          `;
+          thematicCache[res.id] = { lda: res.lda_topic_label, bert: res.bert_topic_label, score: res.score };
+          grid.appendChild(card);
+        });
+        window.inspectDocument(searchData.results[0].id);
+    }
+
+    // 3. NEURAL SYNTHESIS (IF ENABLED)
     if (window.isRagEnabled === true) {
-      const synthResponse = await fetch("/api/synthesis", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          query: query,
-          context_docs: searchData.results,
-          mode: currentMode,
-        }),
-        signal: abortController.signal,
-      });
-
-      const reader = synthResponse.body.getReader();
-      const decoder = new TextDecoder();
-      statusEl.innerText = "Synthesizing...";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        fullText += decoder.decode(value);
-
-        contentEl.innerHTML = marked.parse(fullText);
-        thread.scrollTop = thread.scrollHeight;
-        statusEl.innerText = "Responding...";
+      try {
+        const synthResponse = await fetch("/api/synthesis", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query, context_docs: searchData.results, mode: currentMode }),
+          signal: abortController.signal
+        });
+        const reader = synthResponse.body.getReader();
+        const decoder = new TextDecoder();
+        statusEl.innerText = "Synthesizing...";
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          fullText += decoder.decode(value);
+          contentEl.innerHTML = marked.parse(fullText);
+          thread.scrollTop = thread.scrollHeight;
+        }
+      } catch (err) {
+        console.error("Synthesis error", err);
       }
       statusEl.classList.add("hidden");
       actionsEl.classList.remove("hidden");
     } else {
+      contentEl.innerHTML = `<p class="text-[11px] opacity-40 italic">Synthesis offline. Retrieval complete.</p>`;
       statusEl.classList.add("hidden");
-      revertPulsar();
-      isGenerating = false;
     }
   } catch (error) {
-    if (error.name === "AbortError") {
-      contentEl.innerHTML +=
-        '<p class="text-[10px] italic opacity-40 mt-4">[Synthesis Terminated]</p>';
-    } else {
-      showToast(error.message, "error");
-    }
+    console.error("Critical Failure", error);
   } finally {
     isGenerating = false;
     revertPulsar();
   }
 }
 
-// Forensic CRUD Actions
-window.openForensicEditor = function (docId) {
-  if (window.openEditor) {
-    fetch(`/api/docs/${docId}`)
-      .then((r) => r.json())
-      .then((data) => {
-        window.openEditor(docId, data.content);
-      });
-  } else {
-    showToast("Forensic Editor is currently offline", "error");
-  }
+// Global CRUD Helpers
+window.openForensicEditor = (id) => fetch(`/api/docs/${id}`).then(r => r.json()).then(d => window.openEditor(id, d.content));
+window.purgeForensicRecord = async (id) => {
+    if(!confirm("Purge record?")) return;
+    const r = await fetch(`/api/docs/${id}`, { method: 'DELETE' });
+    if(r.ok) showToast("Purged", "success");
 };
 
-window.purgeForensicRecord = async function (docId) {
-  if (
-    !confirm("Are you sure you want to permanently PURGE this forensic record?")
-  )
-    return;
-  try {
-    const response = await fetch(`/api/docs/${docId}`, { method: "DELETE" });
-    const data = await response.json();
-    if (data.status === "success") {
-      showToast("Forensic Record Purged", "success");
-      document.querySelectorAll(`[onclick*="'${docId}'"]`).forEach((el) => {
-        const card = el.closest(".group\\/card") || el.closest(".result-item");
-        if (card) {
-          card.style.opacity = "0.3";
-          card.style.pointerEvents = "none";
-          card.style.filter = "grayscale(1)";
-        }
-      });
-    }
-  } catch (err) {
-    showToast("Purge Error", "error");
-  }
-};
-
-async function saveInsight(aiMsgId, query, mode) {
-  const contentEl = document.getElementById(`${aiMsgId}-content`);
-  const btn = document.getElementById(`${aiMsgId}-save-btn`);
-  const content = contentEl.innerText;
-
-  try {
-    btn.innerHTML = `<div class="w-2.5 h-2.5 border border-blue-600 border-t-transparent rounded-full animate-spin"></div><span>Saving...</span>`;
-    const response = await fetch("/api/synthesis/save", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query, content, mode }),
-    });
-    const data = await response.json();
-    if (data.status === "success") {
-      btn.className =
-        "px-3 py-1.5 bg-green-500 text-white rounded-md text-[7px] font-bold uppercase tracking-widest shadow-sm flex items-center gap-2";
-      btn.innerHTML = `<svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg><span>Saved to Archive</span>`;
-      btn.onclick = null;
-      showToast("Insight committed to forensic registry.", "success");
-    }
-  } catch (error) {
-    showToast("Save failed", "error");
-    btn.innerHTML = `<span>Error</span>`;
-  }
-}
-
-window.inspectDocument = async function(id) {
-    const inspector = document.getElementById("inspector-content");
-    if (!inspector) return;
-
-    // Remove the intrusive loading state to prevent 'jumping'
-    // We only show a subtle indicator if needed, but for fast APIs we can just update directly
-
-    try {
-        const response = await fetch(`/api/docs/${id}`);
-        const data = await response.json();
-
-        const cached = thematicCache[id] || {};
-
-        // Use fade-in only, remove slide-in to keep it stable
-        inspector.innerHTML = `
-            <div class="space-y-6 animate-in fade-in duration-300">
-                <div class="pb-4 border-b theme-border">
-                    <p class="text-[8px] font-bold theme-text-sec uppercase tracking-[0.2em] opacity-40 mb-1">Active Dossier</p>
-                    <h3 class="text-[11px] font-bold theme-text uppercase tracking-widest">Document #${id}</h3>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="p-3 rounded-lg border theme-border bg-purple-500/5">
-                        <p class="text-[7px] font-bold text-purple-500 uppercase tracking-widest mb-1">LDA Topic</p>
-                        <p class="text-[9px] font-bold theme-text">${cached.lda || data.lda_tag || "Unclassified"}</p>
-                    </div>
-                    <div class="p-3 rounded-lg border theme-border bg-indigo-500/5">
-                        <p class="text-[7px] font-bold text-indigo-500 uppercase tracking-widest mb-1">BERT Context</p>
-                        <p class="text-[9px] font-bold theme-text">${cached.bert || data.bert_tag || "Unclassified"}</p>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        // Inject Forensic Scoring Section
-        const scoringSection = ForensicAnalytics.renderScoringSidebar(id, data, cached);
-        inspector.appendChild(scoringSection);
-
-        // Add Read More button at the very bottom
-        const footerActions = document.createElement("div");
-        footerActions.className = "pt-6 mt-6 border-t theme-border";
-        footerActions.innerHTML = `
-            <button onclick="openReadMore('${id}')" 
-                    class="w-full py-2 bg-blue-600 text-white rounded-lg text-[9px] font-bold uppercase tracking-widest hover:bg-blue-700 transition-all shadow-md shadow-blue-600/20">
-                Full Dossier
-            </button>
-        `;
-        inspector.appendChild(footerActions);
-    } catch (error) {
-        showToast("Inspection failed", "error");
-        inspector.innerHTML = `<p class="text-[9px] text-red-500">Retrieval Failure: ${error.message}</p>`;
-    }
-};
-
-window.openReadMore = async function (id) {
-  const modal = document.getElementById("readmore-modal");
-  const content = document.getElementById("readmore-content");
-
-  if (!modal || !content) return;
-
-  modal.classList.remove("hidden");
-  modal.classList.add("flex");
-
-  content.innerHTML = `
-        <div class="flex flex-col items-center justify-center h-full opacity-40">
-            <div class="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-            <p class="text-[10px] font-bold uppercase tracking-[0.3em] mt-6">Decrypting Dossier #${id}...</p>
+window.inspectDocument = async (id) => {
+    const el = document.getElementById("inspector-content");
+    if(!el) return;
+    const r = await fetch(`/api/docs/${id}`);
+    const d = await r.json();
+    const c = thematicCache[id] || {};
+    el.innerHTML = `<div class="space-y-6">
+        <h3 class="text-[11px] font-bold theme-text uppercase">Document #${id}</h3>
+        <div class="grid grid-cols-2 gap-3 text-[9px] theme-text">
+            <div class="p-3 theme-bg-sec border theme-border rounded"><b>LDA:</b> ${c.lda || d.lda_tag}</div>
+            <div class="p-3 theme-bg-sec border theme-border rounded"><b>BERT:</b> ${c.bert || d.bert_tag}</div>
         </div>
-    `;
-
-  try {
-    const response = await fetch(`/api/docs/${id}`);
-    const data = await response.json();
-
-    // Update Metadata (Priority: Cache -> API -> Default)
-    const cached = thematicCache[id] || {};
-    document.getElementById("readmore-index").innerText =
-      `#${String(id).padStart(4, "0")}`;
-    document.getElementById("readmore-lda").innerText =
-      cached.lda || data.lda_tag || "Unclassified";
-    document.getElementById("readmore-bert").innerText =
-      cached.bert || data.bert_tag || "Unclassified";
-    document.getElementById("readmore-lang").innerText =
-      data.language || "Unknown";
-    document.getElementById("readmore-date").innerText =
-      data.created_at || "--";
-
-    // Update Content with Markdown rendering
-    content.innerHTML = marked.parse(data.content);
-  } catch (err) {
-    content.innerHTML = `<p class="text-red-500 font-bold">Failed to retrieve forensic payload: ${err.message}</p>`;
-  }
+        <button onclick="openReadMore('${id}')" class="w-full py-2 bg-blue-600 text-white rounded text-[9px] font-bold uppercase">Full Dossier</button>
+    </div>`;
 };
 
-window.closeReadMore = function () {
-  const modal = document.getElementById("readmore-modal");
-  if (modal) {
-    modal.classList.add("hidden");
-    modal.classList.remove("flex");
-  }
+window.openReadMore = async (id) => {
+    const m = document.getElementById("readmore-modal");
+    const c = document.getElementById("readmore-content");
+    m.classList.replace("hidden", "flex");
+    const r = await fetch(`/api/docs/${id}`);
+    const d = await r.json();
+    c.innerHTML = marked.parse(d.content);
 };
 
-// Close modal on Escape
-window.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") closeReadMore();
-});
+window.closeReadMore = () => document.getElementById("readmore-modal").classList.replace("flex", "hidden");
+window.addEventListener("keydown", (e) => e.key === "Escape" && closeReadMore());

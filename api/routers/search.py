@@ -216,8 +216,40 @@ async def api_search(
     dynamic_k = max(1, min(5, len(training_data)))
     formatted = []
     
+    # ⚡ FAST-TRACK BYPASS: Skip heavy ML for greetings
+    greetings = ["hello", "hi", "hey", "who are you", "help", "thanks", "thank you"]
+    if query.lower().strip("?!. ") in greetings or not training_data:
+        for r in results:
+            formatted.append({"id": r[0], "content": r[1], "score": float(r[2]), "created_at": r[4]})
+        return {"results": formatted, "intelligence": {"latency": intelligence.get("latency_stats", {}), "alpha": intelligence.get("alpha")}}
+
     if training_data:
         try:
+            # 🧠 NEURAL TITLING PASS: Generate catchy headlines for top results
+            # To keep it fast, we only title the top 5
+            top_docs = results[:5]
+            title_prompt = "Generate a short (3-5 words) catchy forensic title and a thematic category for these records. Return JSON format: {id: {title: '...', category: '...'}}"
+            context_snippet = "\n".join([f"ID {r[0]}: {r[1][:200]}" for r in top_docs])
+            
+            from utils.llm.deepseek_client import DeepSeekClient
+            client = DeepSeekClient()
+            # We use global mode for speed
+            titles_json = {}
+            try:
+                # Fast non-streaming call for batch processing
+                full_resp = ""
+                async for chunk in client.synthesize_stream(f"{title_prompt}\n\n{context_snippet}", [], mode="global"):
+                    full_resp += chunk
+                
+                # Extract JSON from potential markdown
+                json_str = full_resp.strip()
+                if "```json" in json_str:
+                    json_str = json_str.split("```json")[1].split("```")[0].strip()
+                elif "{" in json_str:
+                    json_str = json_str[json_str.find("{"):json_str.rfind("}")+1]
+                titles_json = json.loads(json_str)
+            except: pass
+
             lda_topics, lda_model, dictionary = await anyio.to_thread.run_sync(
                 get_topics, training_data, dynamic_k
             )
@@ -226,6 +258,18 @@ async def api_search(
             )
             
             for r in results:
+                # Use neural titles if available, fallback to smart heuristic
+                id_str = str(r[0])
+                neural = titles_json.get(id_str, {})
+                
+                smart_title = neural.get("title")
+                if not smart_title:
+                    lines = r[1].strip().split('\n')
+                    raw = lines[0][:40].strip() if lines else "Forensic Record"
+                    smart_title = raw.title() if len(raw) > 5 else f"Dossier Segment #{r[0]}"
+                
+                smart_subtitle = neural.get("category", "Forensic Intelligence")
+                
                 lda_id = await anyio.to_thread.run_sync(predict_topic, r[1], lda_model, dictionary)
                 bert_id = await anyio.to_thread.run_sync(predict_bert_topic, r[1], model, bert_kmeans)
                 
@@ -235,12 +279,14 @@ async def api_search(
                 
                 bert_keywords_str = bert_topics[bert_id][1] if bert_id < len(bert_topics) else ""
                 bert_label = ", ".join([k.strip() for k in bert_keywords_str.split(",")][:3])
-
+                
                 # Capture fusion components
                 components = intelligence.get("components", {}).get(r[0], {})
 
                 formatted.append({
                     "id": r[0], 
+                    "smart_title": smart_title,
+                    "smart_subtitle": smart_subtitle,
                     "content": r[1], 
                     "score": float(r[2]),
                     "semantic_score": float(components.get("semantic_score", 0)),
@@ -250,8 +296,9 @@ async def api_search(
                     "created_at": r[4]
                 })
         except Exception as e:
+            print(f"🔥 NEURAL TITLING FAILURE: {e}")
             for r in results:
-                formatted.append({"id": r[0], "content": r[1], "score": float(r[2]), "created_at": r[4]})
+                formatted.append({"id": r[0], "content": r[1][:100], "score": float(r[2]), "created_at": r[4]})
     
     return {
         "results": formatted, 

@@ -23,7 +23,7 @@ class RAGHeart:
             self.top_k = 5
             self.alpha = 0.5
 
-    async def search(self, query: str, top_k=None, threshold=None, strategy="linear"):
+    async def search(self, query: str, top_k=None, threshold=None, strategy="rrf"):
         """
         Execute a synchronized hybrid search across semantic and lexical planes.
         Returns a tuple of (final_results, performance_metrics).
