@@ -1,0 +1,92 @@
+<!-- Forensic Dossier: Read More Modal -->
+<div id="readmore-modal"
+    class="fixed inset-0 z-[80] bg-gray-900/60 backdrop-blur-[6px] items-center justify-center p-4 hidden">
+    <div
+        class="bg-white theme-bg w-full max-w-4xl rounded-t-[2px] shadow-2xl border theme-border overflow-hidden flex flex-col h-[85vh] modal-enter">
+
+        <!-- App-Style Title Bar -->
+        <header class="h-10 pl-4 pr-0 border-b theme-border flex items-center justify-between bg-gray-50/5 shrink-0">
+            <div class="flex items-center gap-3">
+                <div class="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></div>
+                <h2 id="readmore-title" class="text-[10px] font-bold theme-text uppercase tracking-[0.2em]">Forensic Dossier</h2>
+            </div>
+            <div class="flex items-center">
+                <button onclick="closeReadMore()"
+                    class="h-10 w-10 flex items-center justify-center text-gray-400 hover:bg-red-500 hover:text-white transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <div class="flex flex-1 overflow-hidden">
+            <!-- Sidebar: Analytics Snapshot -->
+            <div class="w-64 border-r theme-border bg-gray-50/2 flex flex-col p-6 shrink-0 overflow-y-auto custom-scrollbar">
+                <div class="space-y-8">
+                    <div>
+                        <p class="text-[8px] font-bold theme-text-sec uppercase tracking-[0.2em] opacity-40 mb-3">Registry Index</p>
+                        <div id="readmore-index" class="text-[14px] font-mono font-bold theme-text tracking-tighter">#0000</div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <p class="text-[8px] font-bold theme-text-sec uppercase tracking-[0.2em] opacity-40 mb-3">Neural Classification</p>
+                        
+                        <div class="p-3 rounded-lg border theme-border bg-blue-500/5">
+                            <p class="text-[7px] font-bold text-blue-500 uppercase tracking-widest mb-1">LDA Topic</p>
+                            <p id="readmore-lda" class="text-[10px] font-bold theme-text">--</p>
+                        </div>
+
+                        <div class="p-3 rounded-lg border theme-border bg-purple-500/5">
+                            <p class="text-[7px] font-bold text-purple-500 uppercase tracking-widest mb-1">BERT Context</p>
+                            <p id="readmore-bert" class="text-[10px] font-bold theme-text">--</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <p class="text-[8px] font-bold theme-text-sec uppercase tracking-[0.2em] opacity-40 mb-3">Metadata Signatures</p>
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between text-[9px]">
+                                <span class="theme-text-sec opacity-60 uppercase tracking-widest">Language</span>
+                                <span id="readmore-lang" class="font-bold theme-text uppercase">--</span>
+                            </div>
+                            <div class="flex items-center justify-between text-[9px]">
+                                <span class="theme-text-sec opacity-60 uppercase tracking-widest">Archived</span>
+                                <span id="readmore-date" class="font-bold theme-text">--</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    </div>
+                </div>
+
+                <!-- Content Area: The Full Document -->
+            <div class="flex-1 flex flex-col bg-white theme-bg">
+                <div id="readmore-content" class="flex-1 p-10 overflow-y-auto custom-scrollbar markdown-body text-[14px] leading-relaxed theme-text opacity-90 font-light selection:bg-blue-100 selection:text-blue-900">
+                    <!-- Dynamic Content Here -->
+                </div>
+                
+                <footer class="px-8 py-4 border-t theme-border flex items-center justify-between bg-gray-50/5 shrink-0">
+                    <p class="text-[8px] font-bold theme-text-sec opacity-30 uppercase tracking-[0.3em]">End of Forensic Segment</p>
+                    <div class="flex items-center gap-3">
+                         <button onclick="closeReadMore()" class="px-8 py-2 border theme-border theme-text rounded-lg text-[9px] font-bold uppercase tracking-widest hover:bg-gray-50 transition-all">Close Dossier</button>
+                    </div>
+                </footer>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    #readmore-content {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(59, 130, 246, 0.2) transparent;
+    }
+    #readmore-content::-webkit-scrollbar {
+        width: 4px;
+    }
+    #readmore-content::-webkit-scrollbar-thumb {
+        background: rgba(59, 130, 246, 0.2);
+        border-radius: 10px;
+    }
+</style>

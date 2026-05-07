@@ -26,9 +26,6 @@
         const current = localStorage.getItem(THEME_KEY) || 'light';
         const next = current === 'light' ? 'dark' : 'light';
         setTheme(next);
-        
-        const msg = next === 'dark' ? 'Forensic Midnight Active' : 'Light Laboratory Active';
-        if (window.showToast) showToast(msg, 'info');
     };
 
     // Initial sync

@@ -113,16 +113,41 @@
             rag_enabled: isEnabled,
             result_density: density
         }));
-        
-        if (window.showToast) {
-            showToast(`Assistance Engine: ${isEnabled ? 'ACTIVE' : 'BYPASS'} | Density: ${density}`, isEnabled ? 'success' : 'info');
-        }
     };
     
     window.updateRagState = window.updateAssistantConfig; // Alias for backward compatibility
 
     window.saveSettings = function() {
-        // Collect Forensic Toggle States
+        // Collect Configuration States
+        const forensicConfig = {
+            academic: document.getElementById('toggle-clean-academic')?.checked,
+            pdf: document.getElementById('toggle-clean-pdf')?.checked,
+            math: document.getElementById('toggle-clean-math')?.checked,
+            numerical: document.getElementById('toggle-clean-num')?.checked
+        };
+
+        const assistanceConfig = {
+            rag_enabled: document.getElementById('toggle-rag-engine')?.checked,
+            result_density: parseInt(document.getElementById('rag-result-density')?.value || '3')
+        };
+
+        // Save to Local Persistence (Instant)
+        localStorage.setItem('forensic_config', JSON.stringify(forensicConfig));
+        localStorage.setItem('assistance_config', JSON.stringify(assistanceConfig));
+        
+        // Sync Global State
+        window.isRagEnabled = assistanceConfig.rag_enabled;
+        window.ragResultDensity = assistanceConfig.result_density;
+
+        if (window.showToast) {
+            showToast('System configuration updated locally.', 'success');
+        }
+        
+        // Brief delay for visual feedback then close
+        setTimeout(toggleSettings, 500);
+    };
+
+    window.runForensicSweep = function() {
         const forensicSettings = {
             academic: document.getElementById('toggle-clean-academic')?.checked,
             pdf: document.getElementById('toggle-clean-pdf')?.checked,
@@ -130,17 +155,15 @@
             numerical: document.getElementById('toggle-clean-num')?.checked
         };
 
-        console.log('Pushing Forensic Configuration:', forensicSettings);
+        if (window.showToast) showToast('Initiating forensic optimization cycle...', 'info');
+        
+        const btn = document.getElementById('btn-run-sweep');
+        const originalHtml = btn ? btn.innerHTML : 'Execute Optimization';
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<div class="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto"></div> Processing...';
+        }
 
-        // Show cleaning notification
-        if (window.showToast) showToast('Initiating forensic cleaning...', 'info');
-        
-        // UI Feedback
-        const btn = document.querySelector('button[onclick="saveSettings()"]');
-        const originalText = btn ? btn.innerHTML : 'Update';
-        if (btn) btn.innerHTML = '<div class="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto"></div>';
-        
-        // Execute Forensic Sweep via API
         fetch('/api/maintenance/sweep', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -148,21 +171,23 @@
         })
         .then(response => response.json())
         .then(data => {
-            if (btn) btn.innerHTML = originalText;
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
             
             if (data.status === 'success') {
-                showToast(`Calibration Complete (${data.latency})`, 'success');
-                // Save to local persistence
-                localStorage.setItem('forensic_config', JSON.stringify(forensicSettings));
-                setTimeout(toggleSettings, 800);
+                showToast(`Optimization Complete: ${data.processed} records refined (${data.latency})`, 'success');
             } else {
-                showToast('Sweep Failed: ' + data.message, 'error');
+                showToast('Optimization Failed: ' + data.message, 'error');
             }
         })
         .catch(err => {
-            if (btn) btn.innerHTML = originalText;
-            showToast('Network Error: Forensic Engine Unreachable', 'error');
-            console.error(err);
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
+            showToast('Network Error: Database unreachable', 'error');
         });
     };
 

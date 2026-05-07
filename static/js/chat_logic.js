@@ -72,7 +72,7 @@ async function executeStreamSearch() {
     userMsg.className = "flex flex-col items-end w-full message-bubble";
     const colorClass = currentMode === "local" ? "bg-blue-600" : "bg-purple-600";
     userMsg.innerHTML = `
-        <div class="${colorClass} text-white p-4 rounded-2xl rounded-tr-none max-w-[80%] shadow-sm text-left">
+        <div class="${colorClass} text-white p-4 rounded-2xl rounded-tr-none max-w-[80%] text-left">
             <p class="text-[13px] font-medium leading-relaxed">${query}</p>
         </div>
         <span class="text-[8px] font-bold theme-text-sec opacity-30 uppercase tracking-widest mt-1 mr-1">${currentMode === "local" ? "Forensic Researcher" : "Global Analyst"}</span>
@@ -115,7 +115,7 @@ async function executeStreamSearch() {
         <div id="${aiMsgId}-actions" class="hidden mt-4 flex justify-end items-center gap-2 border-t theme-border pt-2 transition-colors">
             <button onclick="saveInsight('${aiMsgId}', \`${query.replace(/`/g, '\\`').replace(/\${/g, '\\${')}\`, '${currentMode}')" 
                     id="${aiMsgId}-save-btn"
-                    class="px-3 py-1.5 bg-white dark:bg-gray-800 border theme-border rounded-md text-[7px] font-bold uppercase tracking-widest shadow-sm hover:scale-105 active:scale-95 transition-all flex items-center gap-2 group/save">
+                    class="px-3 py-1.5 bg-white dark:bg-gray-800 border theme-border rounded-md text-[7px] font-bold uppercase tracking-widest hover:scale-105 active:scale-95 transition-all flex items-center gap-2 group/save">
                 <svg class="w-2.5 h-2.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
                 <span>Save Insight</span>
             </button>
@@ -150,31 +150,50 @@ async function executeStreamSearch() {
                 searchData.results.slice(0, limit).forEach((res) => {
                     const card = document.createElement("div");
                     card.id = `forensic-card-${res.id}`;
-                    card.className = "w-full p-5 rounded-xl border theme-border bg-white theme-bg shadow-sm hover:shadow-md transition-all group/card relative mb-4 last:mb-0 cursor-pointer";
+                    card.className = "w-full py-4 border-b theme-border last:border-0 group/card relative transition-all cursor-pointer";
                     card.setAttribute('onclick', `inspectDocument('${res.id}')`);
+                    
                     card.innerHTML = `
-                        <div class="flex items-start justify-between gap-4 mb-3">
+                        <div class="flex items-start gap-4 mb-2">
+                            <div class="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 opacity-40 group-hover/card:opacity-100 group-hover/card:scale-125 transition-all"></div>
                             <div class="flex-1">
-                                <h5 class="text-[10px] font-bold theme-text uppercase tracking-widest mb-1 truncate">${res.title || 'Forensic Record'}</h5>
-                                <div class="flex items-center gap-2">
-                                    <span class="text-[7px] font-bold text-blue-600 bg-blue-600/5 px-1.5 py-0.5 rounded border border-blue-600/10 uppercase tracking-tighter">DOC #${res.id}</span>
-                                    <span class="text-[7px] font-bold theme-text-sec opacity-40 uppercase">Archived Segment</span>
+                                <p class="forensic-snippet-sync-${res.id} text-[12px] theme-text leading-relaxed opacity-80 group-hover/card:opacity-100 transition-opacity">
+                                    ${res.snippet || res.content}
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center gap-4 mt-3 ml-5">
+                            <div class="flex items-center gap-2">
+                                <span class="text-[7px] font-bold text-blue-600 bg-blue-600/5 px-1.5 py-0.5 rounded border border-blue-600/10 uppercase tracking-tighter">DOC #${res.id}</span>
+                            </div>
+                            
+                            <div class="h-[1px] flex-1 bg-gray-100 dark:bg-gray-800 opacity-20"></div>
+
+                            <div class="flex items-center gap-3">
+                                <button onclick="openReadMore('${res.id}')" 
+                                        class="text-[8px] font-bold text-blue-600 uppercase tracking-widest hover:underline flex items-center gap-1.5">
+                                    <span>Inspect Full Dossier</span>
+                                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                                </button>
+                                
+                                <div class="flex items-center gap-1.5 opacity-40 group-hover/card:opacity-100 transition-opacity ml-2">
+                                    <button onclick="event.stopPropagation(); openForensicEditor('${res.id}')" class="p-1.5 hover:text-blue-600 transition-all" title="Update Record">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-5M18.364 5.636l-3.536 3.536m0 0l-1.06-1.06m1.06 1.06l1.06 1.06m-1.06-1.06l3.536-3.536z"></path></svg>
+                                    </button>
+                                    <button onclick="event.stopPropagation(); purgeForensicRecord('${res.id}')" class="p-1.5 hover:text-red-600 transition-all" title="Delete Record">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    </button>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-1.5 opacity-0 group-hover/card:opacity-100 transition-opacity">
-                                <button onclick="event.stopPropagation(); openForensicEditor('${res.id}')" class="p-2 bg-blue-600/5 hover:bg-blue-600 hover:text-white rounded-lg transition-all" title="Refine">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-5M18.364 5.636l-3.536 3.536m0 0l-1.06-1.06m1.06 1.06l1.06 1.06m-1.06-1.06l3.536-3.536z"></path></svg>
-                                </button>
-                                <button onclick="event.stopPropagation(); purgeForensicRecord('${res.id}')" class="p-2 bg-red-600/5 hover:bg-red-600 hover:text-white rounded-lg transition-all" title="Purge">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                </button>
-                            </div>
-                        </div>
-                        <p class="forensic-snippet-sync-${res.id} text-[11px] theme-text-sec leading-relaxed line-clamp-4 opacity-80">${res.snippet || res.content}</p>
-                        <div class="mt-4 pt-3 border-t border-gray-50 dark:border-gray-800 flex justify-end">
-                            <a href="/show/${res.id}" target="_blank" class="text-[8px] font-bold text-blue-600 uppercase tracking-widest hover:underline">Inspect Full Dossier →</a>
                         </div>
                     `;
+                    // Cache thematic data for this document in the current session
+                    thematicCache[res.id] = {
+                        lda: res.lda_topic_label,
+                        bert: res.bert_topic_label
+                    };
+                    
                     grid.appendChild(card);
                 });
             }
@@ -302,7 +321,7 @@ async function inspectDocument(id) {
                 <div class="space-y-2">
                     <p class="text-[8px] font-bold theme-text-sec uppercase tracking-widest opacity-40">Segment Content</p>
                     <div class="p-4 rounded-lg bg-gray-50/50 dark:bg-gray-800/30 border theme-border">
-                        <p class="text-[11px] theme-text leading-relaxed font-light">${data.content}</p>
+                        <p class="text-[11px] theme-text leading-relaxed font-light">${data.content.substring(0, 500)}${data.content.length > 500 ? '...' : ''}</p>
                     </div>
                 </div>
 
@@ -317,29 +336,15 @@ async function inspectDocument(id) {
                     </div>
                 </div>
 
-                <div class="space-y-3">
-                    <p class="text-[8px] font-bold theme-text-sec uppercase tracking-widest opacity-40">Metadata Signatures</p>
-                    <div class="space-y-1.5">
-                        <div class="flex items-center justify-between text-[9px]">
-                            <span class="theme-text-sec opacity-60">Language</span>
-                            <span class="font-bold theme-text uppercase">${data.language}</span>
-                        </div>
-                        <div class="flex items-center justify-between text-[9px]">
-                            <span class="theme-text-sec opacity-60">Archived</span>
-                            <span class="font-bold theme-text">${new Date(data.created_at).toLocaleDateString()}</span>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="pt-4 mt-6 border-t theme-border flex flex-col gap-2">
-                    <button onclick="openForensicEditor('${id}', \`${data.content.replace(/`/g, '\\`').replace(/\${/g, '\\${')}\`)" 
-                            class="w-full py-2 bg-blue-600 text-white rounded-lg text-[9px] font-bold uppercase tracking-widest hover:bg-blue-700 transition-all shadow-md shadow-blue-600/20">
-                        Refine Record
+                    <button onclick="openReadMore('${id}')" 
+                            class="w-full py-2 bg-blue-600 text-white rounded-lg text-[9px] font-bold uppercase tracking-widest hover:bg-blue-700 transition-all">
+                        Full Dossier
                     </button>
-                    <a href="/show/${id}" target="_blank" 
-                       class="w-full py-2 border theme-border theme-text rounded-lg text-[9px] font-bold uppercase tracking-widest hover:bg-gray-50 text-center transition-all">
-                        Full Evidence
-                    </a>
+                    <button onclick="openForensicEditor('${id}')" 
+                            class="w-full py-2 border theme-border theme-text rounded-lg text-[9px] font-bold uppercase tracking-widest hover:bg-gray-50 text-center transition-all">
+                        Update Record
+                    </button>
                 </div>
             </div>
         `;
@@ -348,3 +353,52 @@ async function inspectDocument(id) {
         inspector.innerHTML = `<p class="text-[9px] text-red-500">Retrieval Failure: ${error.message}</p>`;
     }
 }
+
+window.openReadMore = async function(id) {
+    const modal = document.getElementById("readmore-modal");
+    const content = document.getElementById("readmore-content");
+    
+    if (!modal || !content) return;
+
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+    
+    content.innerHTML = `
+        <div class="flex flex-col items-center justify-center h-full opacity-40">
+            <div class="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            <p class="text-[10px] font-bold uppercase tracking-[0.3em] mt-6">Decrypting Dossier #${id}...</p>
+        </div>
+    `;
+
+    try {
+        const response = await fetch(`/api/docs/${id}`);
+        const data = await response.json();
+
+        // Update Metadata (Priority: Cache -> API -> Default)
+        const cached = thematicCache[id] || {};
+        document.getElementById("readmore-index").innerText = `#${String(id).padStart(4, '0')}`;
+        document.getElementById("readmore-lda").innerText = cached.lda || data.lda_tag || 'Unclassified';
+        document.getElementById("readmore-bert").innerText = cached.bert || data.bert_tag || 'Unclassified';
+        document.getElementById("readmore-lang").innerText = data.language || 'Unknown';
+        document.getElementById("readmore-date").innerText = data.created_at || '--';
+
+        // Update Content with Markdown rendering
+        content.innerHTML = marked.parse(data.content);
+        
+    } catch (err) {
+        content.innerHTML = `<p class="text-red-500 font-bold">Failed to retrieve forensic payload: ${err.message}</p>`;
+    }
+};
+
+window.closeReadMore = function() {
+    const modal = document.getElementById("readmore-modal");
+    if (modal) {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+    }
+};
+
+// Close modal on Escape
+window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeReadMore();
+});

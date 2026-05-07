@@ -6,7 +6,7 @@ from fastapi.responses import HTMLResponse
 from api.dependencies import get_async_db, get_nlp_model, templates
 from api.helpers import parse_lda_keywords, parse_bert_keywords
 from hybrid.RAGHeart import RAGHeart
-from utils.analytics.topic_modeling import get_topics, predict_topic
+from utils.analytics.topic_modeling import get_topics, predict_topic, preprocess
 from utils.analytics.bert_topic import get_bert_topics, predict_bert_topic
 
 from api.schemas import SearchQuery
