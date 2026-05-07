@@ -24,9 +24,22 @@
     {% endif %}
 
     {% if results %}
-    <div class="mb-4">
-        <p class="text-sm text-gray-500">Showing results for <span class="italic font-medium text-gray-900">"{{ query
-                }}"</span></p>
+    <div class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <p class="text-sm text-gray-500">Showing results for <span class="italic font-medium text-gray-900">"{{ query }}"</span></p>
+        </div>
+        
+        {% if stats and stats.latency_stats %}
+        <div class="flex items-center space-x-2 text-[10px] font-mono uppercase tracking-tight text-gray-400 bg-gray-50 px-3 py-1.5 rounded-md border border-gray-100">
+            <span class="flex items-center"><span class="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1.5"></span>Semantic: <span class="text-gray-700 ml-1 font-bold">{{ "%.2f"|format(stats.latency_stats.semantic_ms) }}ms</span></span>
+            <span class="mx-2 text-gray-200">|</span>
+            <span class="flex items-center"><span class="w-1.5 h-1.5 rounded-full bg-purple-500 mr-1.5"></span>Keyword: <span class="text-gray-700 ml-1 font-bold">{{ "%.2f"|format(stats.latency_stats.keyword_ms) }}ms</span></span>
+            <span class="mx-2 text-gray-200">|</span>
+            <span class="flex items-center"><span class="w-1.5 h-1.5 rounded-full bg-indigo-500 mr-1.5"></span>Fusion: <span class="text-gray-700 ml-1 font-bold">{{ "%.2f"|format(stats.latency_stats.fusion_ms) }}ms</span></span>
+            <span class="mx-2 text-gray-200">|</span>
+            <span class="flex items-center">Total: <span class="text-blue-600 ml-1 font-bold">{{ "%.2f"|format(stats.latency_stats.total_ms) }}ms</span></span>
+        </div>
+        {% endif %}
     </div>
 
     <div class="space-y-6">

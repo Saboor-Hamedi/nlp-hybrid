@@ -44,3 +44,48 @@ def predict_bert_topic(text, embedder, kmeans_model):
     embedding = embedder.encode([text], show_progress_bar=False)
     prediction = kmeans_model.predict(embedding)
     return int(prediction[0])
+
+
+def plot_bert_clusters(documents, embedder, kmeans_model):
+    """Visualize BERT clusters using PCA for 2D dimensionality reduction."""
+    try:
+        import matplotlib.pyplot as plt
+        from sklearn.decomposition import PCA
+        import os
+        
+        # 1. Generate Embeddings
+        embeddings = embedder.encode(documents, show_progress_bar=False)
+        
+        # 2. Reduce to 2D
+        pca = PCA(n_components=2, random_state=42)
+        reduced_embeddings = pca.fit_transform(embeddings)
+        
+        # 3. Get labels
+        labels = kmeans_model.predict(embeddings)
+        
+        # 4. Plot
+        plt.figure(figsize=(10, 7))
+        scatter = plt.scatter(reduced_embeddings[:, 0], reduced_embeddings[:, 1], 
+                            c=labels, cmap='viridis', alpha=0.6, s=50)
+        
+        plt.title('BERT Topic Clusters (PCA 2D Projection)', fontsize=14, fontweight='bold', color='#1F2937')
+        plt.xlabel('Principal Component 1', fontsize=11, color='#4B5563')
+        plt.ylabel('Principal Component 2', fontsize=11, color='#4B5563')
+        
+        # Add legend
+        legend = plt.legend(*scatter.legend_elements(), title="Topics", loc="best")
+        plt.gca().add_artist(legend)
+        
+        plt.grid(True, linestyle='--', alpha=0.3)
+        plt.gca().spines['top'].set_visible(False)
+        plt.gca().spines['right'].set_visible(False)
+        
+        plt.tight_layout()
+        os.makedirs('static', exist_ok=True)
+        plt.savefig('static/bert_clusters.png', dpi=100, bbox_inches='tight')
+        print("✓ BERT cluster plot saved as 'static/bert_clusters.png'")
+        plt.close()
+    except Exception as e:
+        print(f"Error plotting BERT clusters: {e}")
+        if 'plt' in locals():
+            plt.close()

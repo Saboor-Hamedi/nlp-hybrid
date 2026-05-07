@@ -1,6 +1,8 @@
+import os
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import numpy as np
 import nltk
 from gensim import corpora
 from gensim.models import CoherenceModel, LdaModel
@@ -143,6 +145,91 @@ def plot_coherence(coherence_scores, best_k=None):
     except Exception as e:
         print(f"Error plotting coherence: {e}")
         plt.close()
+
+
+def plot_lda_topics(lda_model, num_topics=5):
+    """Generate a beautiful bar chart visualization for LDA topics."""
+    try:
+        topics = lda_model.show_topics(num_topics=num_topics, num_words=10, formatted=False)
+        
+        # Calculate grid size
+        cols = 2
+        rows = (num_topics + 1) // cols
+        
+        plt.figure(figsize=(12, rows * 4))
+        
+        for i, (topic_id, words) in enumerate(topics):
+            plt.subplot(rows, cols, i + 1)
+            
+            word_names = [w[0] for w in words]
+            word_weights = [w[1] for w in words]
+            
+            # Sort for better visualization
+            sorted_indices = np.argsort(word_weights)
+            word_names = [word_names[j] for j in sorted_indices]
+            word_weights = [word_weights[j] for j in sorted_indices]
+            
+            plt.barh(word_names, word_weights, color='#6366F1', alpha=0.8)
+            plt.title(f'LDA Topic {topic_id + 1}', fontsize=12, fontweight='bold', color='#1F2937')
+            plt.grid(axis='x', linestyle='--', alpha=0.4)
+            plt.gca().spines['top'].set_visible(False)
+            plt.gca().spines['right'].set_visible(False)
+        
+        plt.tight_layout()
+        os.makedirs('static', exist_ok=True)
+        plt.savefig('static/lda_topics.png', dpi=100, bbox_inches='tight')
+        print("✓ LDA topic plot saved as 'static/lda_topics.png'")
+        plt.close()
+    except Exception as e:
+        print(f"Error plotting LDA topics: {e}")
+        plt.close()
+
+
+def plot_tfidf(documents, top_n=15):
+    """Generate a bar chart for the top TF-IDF words across the corpus."""
+    try:
+        from sklearn.feature_extraction.text import TfidfVectorizer
+        import pandas as pd
+        
+        # We need a custom tokenizer that uses our preprocess function
+        vectorizer = TfidfVectorizer(tokenizer=lambda x: preprocess(x), token_pattern=None)
+        tfidf_matrix = vectorizer.fit_transform(documents)
+        
+        # Sum tfidf weights for each word across all documents
+        sums = tfidf_matrix.sum(axis=0)
+        
+        # Get feature names
+        features = vectorizer.get_feature_names_out()
+        
+        # Create a list of (word, score) tuples
+        data = []
+        for col, term in enumerate(features):
+            data.append((term, sums[0, col]))
+            
+        ranking = pd.DataFrame(data, columns=['term', 'rank'])
+        ranking = ranking.sort_values('rank', ascending=False).head(top_n)
+        
+        # Plotting
+        plt.figure(figsize=(10, 6))
+        plt.barh(ranking['term'], ranking['rank'], color='#EC4899', alpha=0.7)
+        plt.gca().invert_yaxis()
+        plt.title(f'Top {top_n} Terms by TF-IDF Score', fontsize=14, fontweight='bold', color='#1F2937', pad=20)
+        plt.xlabel('Cumulative TF-IDF Weight', fontsize=11, color='#4B5563')
+        plt.grid(axis='x', linestyle='--', alpha=0.3)
+        plt.gca().spines['top'].set_visible(False)
+        plt.gca().spines['right'].set_visible(False)
+        
+        plt.tight_layout()
+        os.makedirs('static', exist_ok=True)
+        plt.savefig('static/tfidf_scores.png', dpi=100, bbox_inches='tight')
+        print("✓ TF-IDF plot saved as 'static/tfidf_scores.png'")
+        plt.close()
+        plt.close()
+        return ranking.to_dict('records')
+    except Exception as e:
+        print(f"Error plotting TF-IDF: {e}")
+        plt.close()
+        return []
 
 
 def get_topics(documents, num_topics=10):

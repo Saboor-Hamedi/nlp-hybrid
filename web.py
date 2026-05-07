@@ -253,14 +253,15 @@ def search():
             results=results_dict,
             query=query,
             lda_topics=lda_topics,
-            bert_topics=bert_topics)
+            bert_topics=bert_topics,
+            stats=stats)
     return 'Error: Could not connect to the database.'
 
 #  Topic modeling
 # Add this import at the top
-from utils.analytics.bert_topic import get_bert_topics
+from utils.analytics.bert_topic import get_bert_topics, plot_bert_clusters
 from utils.analytics.sentiment import get_sentiment_modeling
-from utils.analytics.topic_modeling import get_topics, predict_topic, preprocess
+from utils.analytics.topic_modeling import get_topics, predict_topic, preprocess, plot_lda_topics, plot_tfidf
 
 
 @app.route('/topics')
@@ -295,6 +296,32 @@ def show_topics():
             # Run BERT
             bert_results, bert_kmeans = get_bert_topics(docs, get_model(), num_topics=best_k)
 
+            print("Generating Figures...")
+            # Generate the new figures
+            plot_lda_topics(lda_model, num_topics=best_k)
+            tfidf_ranking = plot_tfidf(docs)
+            plot_bert_clusters(docs, get_model(), bert_kmeans)
+
+            print("\n" + "="*60)
+            print("🚀 LIVE ANALYSIS REPORT")
+            print("="*60)
+            print("\n--- TOP TF-IDF KEYWORDS ---")
+            for item in tfidf_ranking[:10]:
+                print(f"  • {item['term']}: {item['rank']:.4f}")
+
+            print("\n--- LDA TOPIC FINGERPRINTS ---")
+            for topic_id, words in lda_results:
+                print(f"  • Topic #{topic_id + 1}: {words}")
+
+            print("\n--- BERT CONTEXTUAL CLUSTERS ---")
+            for topic_id, words in bert_results:
+                print(f"  • Topic #{topic_id + 1}: {words}")
+            print("\n" + "="*60 + "\n")
+
+            lda_image = "/static/lda_topics.png"
+            tfidf_image = "/static/tfidf_scores.png"
+            bert_image = "/static/bert_clusters.png"
+
             # creating a list of dictionary that include the tag
             documents_with_tags = []
             for content in docs[:50]:  # Limit to first 50 for faster display
@@ -313,7 +340,10 @@ def show_topics():
                 lda_topics=lda_results,
                 bert_topics=bert_results,
                 documents=documents_with_tags,
-                coherence_image=coherence_image)
+                coherence_image=coherence_image,
+                lda_image=lda_image,
+                tfidf_image=tfidf_image,
+                bert_image=bert_image)
     except Exception as e:
         print(f"Error in show_topics: {e}")
         return f'Error: {e}'
@@ -345,4 +375,4 @@ def show_modeling():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, use_reloader=False)
+    app.run(debug=True, use_reloader=True)
