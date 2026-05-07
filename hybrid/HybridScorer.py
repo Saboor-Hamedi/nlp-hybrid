@@ -45,7 +45,12 @@ class HybridScorer:
             denom = max_s - min_s if max_s != min_s else 1.0
             return [(s - min_s) / denom if max_s != min_s else (1.0 if s > 0 else 0.0) for s in scores]
 
-        denom = max_s if max_s > 0 else 1.0
+        # Industrial Fix: Confidence-Aware Normalization
+        # If the max score is very low (e.g. searching 'hello'), don't stretch it to 1.0.
+        # This prevents 'weak' matches from being treated as high-fidelity context.
+        confidence_floor = 0.2
+        denom = max(max_s, confidence_floor)
+        
         return [(s / denom) if denom > 0 else 0.0 for s in scores]
 
     def combine(
