@@ -1,7 +1,7 @@
 from typing import Optional, List, Dict, Any
 import anyio
 from fastapi import APIRouter, Request, Form, Query, Depends
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 
 from api.dependencies import get_async_db, get_nlp_model, templates
 from api.helpers import parse_lda_keywords, parse_bert_keywords
@@ -202,25 +202,30 @@ async def search(
 @router.get("/api/search")
 async def api_search(
     query: str = Query(..., min_length=2),
+    limit: int = Query(5, ge=1, le=50),
     conn = Depends(get_async_db),
     model = Depends(get_nlp_model)
 ):
     """
     Pure JSON Retrieval: Optimized for the RAG Chat Engine.
     """
+    print(f"DEBUG: [API Search] Incoming Query: '{query}' | Requested Limit: {limit}")
     heart = RAGHeart(conn, model)
-    results, intelligence = await heart.search(query)
+    results, intelligence = await heart.search(query, top_k=limit)
+    
+    # 🚨 SAFETY SLICE: Physically cap the results to the requested limit
+    results = results[:limit]
     
     # Quick thematic discovery
     training_data = [r[1] for r in results]
-    dynamic_k = max(1, min(5, len(training_data)))
+    dynamic_k = max(1, min(limit, 5, len(training_data)))
     formatted = []
     
     # ⚡ FAST-TRACK BYPASS: Skip heavy ML for greetings
     greetings = ["hello", "hi", "hey", "who are you", "help", "thanks", "thank you"]
     if query.lower().strip("?!. ") in greetings or not training_data:
         for r in results:
-            formatted.append({"id": r[0], "content": r[1], "score": float(r[2]), "created_at": r[4]})
+            formatted.append({"id": r[0], "content": r[1], "score": float(r[2]), "created_at": r[4].isoformat() if r[4] else None})
         return {"results": formatted, "intelligence": {"latency": intelligence.get("latency_stats", {}), "alpha": intelligence.get("alpha")}}
 
     if training_data:
@@ -293,17 +298,20 @@ async def api_search(
                     "bm25_score": float(components.get("bm25_score", 0)),
                     "lda_topic_label": lda_label,
                     "bert_topic_label": bert_label,
-                    "created_at": r[4]
+                    "created_at": r[4].isoformat() if r[4] else None
                 })
         except Exception as e:
             print(f"🔥 NEURAL TITLING FAILURE: {e}")
             for r in results:
-                formatted.append({"id": r[0], "content": r[1][:100], "score": float(r[2]), "created_at": r[4]})
+                formatted.append({"id": r[0], "content": r[1][:100], "score": float(r[2]), "created_at": r[4].isoformat() if r[4] else None})
     
-    return {
-        "results": formatted, 
-        "intelligence": {
-            "latency": intelligence.get("latency_stats", {}),
-            "alpha": intelligence.get("alpha")
-        }
-    }
+    return JSONResponse(
+        content={
+            "results": formatted, 
+            "intelligence": {
+                "latency": intelligence.get("latency_stats", {}),
+                "alpha": intelligence.get("alpha")
+            }
+        },
+        headers={"Cache-Control": "no-store, no-cache, must-revalidate, max-age=0"}
+    )
