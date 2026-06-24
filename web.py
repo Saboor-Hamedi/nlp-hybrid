@@ -6,7 +6,7 @@ from flask import Flask, render_template, request
 from db.db_connection import db_connection, get_model
 from db.operations.DocumentManager import DocumentManager
 from hybrid.hybrid_search import search_hybrid
-from utils.analytics.bert_topic import get_bert_topics, predict_bert_topic
+from utils.analytics.bert_topic import get_bert_topics, predict_bert_topic, predict_bert_topics_batch
 from utils.analytics.topic_modeling import (
     find_best_k,
     get_topics,
@@ -17,6 +17,7 @@ from utils.cli_handlers import handle_search
 
 # The main connection to the database
 app = Flask(__name__, template_folder='templates', static_folder='static')
+get_model()  # Pre-warm the AI model at startup so first request isn't slow
 
 # Helper function to parse LDA topic string
 def parse_lda_keywords(topic_string, top_k=5, min_weight=0.01):
@@ -141,7 +142,7 @@ def search():
 
         # ========== TRAIN TOPIC MODELS ON SEARCH RESULTS ==========
         training_data = [r[1] for r in results]
-        
+
         # Use up to 5 topics, but no more than the number of search results we actually have
         dynamic_k = max(1, min(5, len(training_data)))
 
@@ -169,23 +170,23 @@ def search():
         conn.close()
 
         # Convert results to dictionary format with topic predictions
-        results_dict = []
-        for r in results:
-            lda_topic_id = 0
-            bert_topic_id = 0
+        # Batch predict BERT topics for all results at once (much faster)
+        bert_topic_ids = (
+            predict_bert_topics_batch([r[1] for r in results], get_model(), bert_kmeans)
+            if bert_kmeans else [0] * len(results)
+        )
 
-            # Predict topics for this result (safely)
+        results_dict = []
+        for i, r in enumerate(results):
+            lda_topic_id = 0
+            bert_topic_id = bert_topic_ids[i]
+
+            # Predict LDA topic for this result (safely)
             if lda_model and dictionary:
                 try:
                     lda_topic_id = predict_topic(r[1], lda_model, dictionary)
                 except:
                     lda_topic_id = 0
-
-            if bert_kmeans:
-                try:
-                    bert_topic_id = predict_bert_topic(r[1], get_model(), bert_kmeans)
-                except:
-                    bert_topic_id = 0
 
             # Parse LDA keywords from topic string with type checking
             lda_keywords = {}
@@ -261,7 +262,13 @@ def search():
 # Add this import at the top
 from utils.analytics.bert_topic import get_bert_topics, plot_bert_clusters
 from utils.analytics.sentiment import get_sentiment_modeling
-from utils.analytics.topic_modeling import get_topics, predict_topic, preprocess, plot_lda_topics, plot_tfidf
+from utils.analytics.topic_modeling import (
+    get_topics,
+    plot_lda_topics,
+    plot_tfidf,
+    predict_topic,
+    preprocess,
+)
 
 
 @app.route('/topics')
@@ -270,8 +277,8 @@ def show_topics():
         conn = db_connection()
         if conn:
             cursor = conn.cursor()
-            # Fetch last 100 documents to analyze
-            cursor.execute('SELECT content FROM document ORDER BY id DESC LIMIT 100')
+            # Fetch last 50 documents to analyze (fewer docs = faster page load)
+            cursor.execute('SELECT content FROM document ORDER BY id DESC LIMIT 50')
 
             docs = [row[0] for row in cursor.fetchall()]
             cursor.close()
@@ -281,8 +288,8 @@ def show_topics():
                 return "No documents found to analyze topics."
 
             print("Starting topic analysis...")
-            # Find best k value and plot coherence
-            best_k, coherence_scores = find_best_k(docs, k_range=range(2, 7))
+            # Find best k value (fewer iterations = faster)
+            best_k, coherence_scores = find_best_k(docs, k_range=range(2, 5))
             print(f"Best k found (Elbow Method): {best_k}")
 
             plot_coherence(coherence_scores, best_k=best_k)
@@ -293,14 +300,14 @@ def show_topics():
             lda_results, lda_model, dictionary = get_topics(docs, num_topics=best_k)
 
             print("Training BERT...")
-            # Run BERT
-            bert_results, bert_kmeans = get_bert_topics(docs, get_model(), num_topics=best_k)
+            # Run BERT (returns embeddings too, for reuse downstream)
+            bert_results, bert_kmeans, bert_embeddings = get_bert_topics(docs, get_model(), num_topics=best_k)
 
             print("Generating Figures...")
             # Generate the new figures
             plot_lda_topics(lda_model, num_topics=best_k)
             tfidf_ranking = plot_tfidf(docs)
-            plot_bert_clusters(docs, get_model(), bert_kmeans)
+            plot_bert_clusters(docs, get_model(), bert_kmeans, embeddings=bert_embeddings)
 
             print("\n" + "="*60)
             print("🚀 LIVE ANALYSIS REPORT")
@@ -323,16 +330,17 @@ def show_topics():
             bert_image = "/static/bert_clusters.png"
 
             # creating a list of dictionary that include the tag
+            # Batch predict BERT topics (much faster than 50 individual encode calls)
+            bert_ids = predict_bert_topics_batch(docs, get_model(), bert_kmeans)
             documents_with_tags = []
-            for content in docs[:50]:  # Limit to first 50 for faster display
+            for i, content in enumerate(docs):
                 lda_id = predict_topic(content, lda_model, dictionary)
-                bert_id = predict_bert_topic(content, get_model(), bert_kmeans)
                 tokens = preprocess(content)
                 documents_with_tags.append({
                     "content": content,
                     "tokens": " ".join(tokens),
                     "lda_tag": f"LDA {lda_id + 1}",
-                    "bert_tag": f"BERT {bert_id + 1}"
+                    "bert_tag": f"BERT {bert_ids[i] + 1}"
                 })
 
             print("Rendering template...")

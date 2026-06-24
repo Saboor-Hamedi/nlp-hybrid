@@ -9,9 +9,10 @@ def get_bert_topics(documents, embedder, num_topics=10):
     Returns:
         - topic_summaries: List of strings describing each topic
         - kmeans_model: The trained KMeans model
+        - embeddings: The computed BERT embeddings (for reuse downstream)
     """
     if not documents:
-        return [], None
+        return [], None, None
 
     # 1. Generate Embeddings
     embeddings = embedder.encode(documents, show_progress_bar=False)
@@ -35,26 +36,39 @@ def get_bert_topics(documents, embedder, num_topics=10):
         keywords = ", ".join([word for word, count in most_common])
         topic_summaries.append((i, keywords))
         
-    return topic_summaries, kmeans
+    return topic_summaries, kmeans, embeddings
 
-def predict_bert_topic(text, embedder, kmeans_model):
+def predict_bert_topic(text, embedder, kmeans_model, embedding=None):
     """Predicts the topic ID for a new piece of text using BERT embeddings."""
     if not kmeans_model:
         return 0
-    embedding = embedder.encode([text], show_progress_bar=False)
+    if embedding is None:
+        embedding = embedder.encode([text], show_progress_bar=False)
+    else:
+        embedding = embedding.reshape(1, -1)
     prediction = kmeans_model.predict(embedding)
     return int(prediction[0])
 
 
-def plot_bert_clusters(documents, embedder, kmeans_model):
+def predict_bert_topics_batch(texts, embedder, kmeans_model):
+    """Predict topic IDs for multiple texts in a single batch (much faster)."""
+    if not kmeans_model or not texts:
+        return [0] * len(texts)
+    embeddings = embedder.encode(texts, show_progress_bar=False)
+    predictions = kmeans_model.predict(embeddings)
+    return [int(p) for p in predictions]
+
+
+def plot_bert_clusters(documents, embedder, kmeans_model, embeddings=None):
     """Visualize BERT clusters using PCA for 2D dimensionality reduction."""
     try:
         import matplotlib.pyplot as plt
         from sklearn.decomposition import PCA
         import os
         
-        # 1. Generate Embeddings
-        embeddings = embedder.encode(documents, show_progress_bar=False)
+        # 1. Generate Embeddings (reuse if provided)
+        if embeddings is None:
+            embeddings = embedder.encode(documents, show_progress_bar=False)
         
         # 2. Reduce to 2D
         pca = PCA(n_components=2, random_state=42)
